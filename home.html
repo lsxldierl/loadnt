@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Pega el enlace de una página que no carga. La revisamos con un navegador real y te avisamos al celular cuando funcione.">
+<title>{{SITE_NAME}}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Crect x='3' y='11' width='7' height='10' fill='%23fff'/%3E%3Crect x='12.5' y='11' width='7' height='10' fill='%23fff'/%3E%3Crect x='22.75' y='11.75' width='5.5' height='8.5' fill='none' stroke='%233ecf8e' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/style.css">
+<script src="/fx.js"></script>
+<style>
+.watch-form{display:flex;gap:10px;margin-top:36px;max-width:780px}
+.field{flex:1;min-width:0;display:flex;align-items:center;height:52px;background:var(--raise);border:1px solid var(--line-2);border-radius:2px;transition:border-color .2s}
+.field:focus-within{border-color:var(--fg)}
+.field .pr{font:14px var(--mono);color:var(--green);padding:0 4px 0 16px}
+.field input{flex:1;min-width:0;height:100%;padding:0 16px 0 6px;background:transparent;border:0;color:var(--fg);font:15px var(--mono);outline:none}
+.field input::placeholder{color:var(--dim)}
+.watch-form .btn{height:52px;padding:0 24px}
+.form-msg{min-height:22px;margin:12px 0 0;font:13px var(--mono);color:var(--bad)}
+
+.lists{display:flex;gap:0}
+.lists>section{flex:1;min-width:0}
+.lists>section:not([hidden])~section:not([hidden]){border-left:1px solid var(--line);padding-left:32px;margin-left:32px}
+.rows{list-style:none;margin:12px 0 0;padding:0}
+.rows li{border-top:1px solid var(--line)}
+.rows a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;text-decoration:none}
+.rows a .go{font-family:var(--mono);color:var(--dim);transition:transform .2s var(--ease),color .2s}
+.rows a:hover .go{transform:translateX(4px);color:var(--fg)}
+.host{font-weight:500;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.path{display:block;font:12px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.right{display:flex;align-items:center;gap:12px;flex:none}
+
+.how{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:48px;align-items:start}
+.term{font:13.5px/1.9 var(--mono);color:var(--muted);border-left:1px solid var(--line-2);padding:4px 0 4px 24px;min-width:0;overflow-x:auto}
+.term div{white-space:pre-wrap;word-break:break-word}
+.term .cmd{color:var(--fg)}
+.term .cmd::before{content:"$ ";color:var(--green)}
+.term .t{color:var(--dim)}
+.term .ok{color:var(--ok)} .term .bad{color:var(--bad)} .term .warn{color:var(--warn)} .term .go{color:var(--fg)}
+.facts{list-style:none;margin:28px 0 0;padding:0}
+.facts li{padding:12px 0;border-top:1px solid var(--line);color:var(--muted);font-size:15px}
+.facts li b{color:var(--fg);font-weight:500}
+@media (max-width:860px){
+  .watch-form{flex-direction:column}
+  .lists{flex-direction:column;gap:36px}
+  .lists>section:not([hidden])~section:not([hidden]){border-left:0;padding-left:0;margin-left:0}
+  .how{grid-template-columns:1fr;gap:28px}
+  .term{font-size:12.5px;padding-left:16px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg class="logo seek" viewBox="0 0 28 14" aria-hidden="true"><rect x="0" y="0" width="7.5" height="14"/><rect x="10.25" y="0" width="7.5" height="14"/><rect class="b3" x="21.25" y=".75" width="6" height="12.5"/></svg>
+      {{SITE_NAME}}
+    </a>
+    <a class="navlink" href="#como">cómo funciona</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="ticker" id="ticker" aria-hidden="true"></div>
+  <div class="wrap">
+    <p class="eyebrow">vigilante de páginas que no cargan</p>
+    <h1><span class="line"><span>¿Esa página no carga?</span></span><span class="line" style="--l:1"><span>Te avisamos cuando funcione<span class="caret"></span></span></span></h1>
+    <form class="watch-form" id="form" novalidate data-reveal>
+      <label class="field" for="url"><span class="pr">›</span>
+        <span class="sr">Enlace de la página</span>
+        <input id="url" name="url" type="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="https://sitio.gob.ec/formulario" required>
+      </label>
+      <button class="btn" id="go" type="submit">Vigilar página <span class="arr">→</span></button>
+    </form>
+    <p class="form-msg" id="msg" role="alert"></p>
+  </div>
+</section>
+
+<main>
+  <section class="sec" id="listsSec" hidden>
+    <div class="wrap lists" data-stagger>
+      <section id="mineCard" hidden data-reveal><span class="tag">tus páginas en este dispositivo</span><ul class="rows" id="mine"></ul></section>
+      <section id="presetCard" hidden data-reveal><span class="tag">ya estamos vigilando</span><ul class="rows" id="presets"></ul></section>
+    </div>
+  </section>
+
+  <section class="sec" id="como">
+    <div class="wrap how">
+      <div>
+        <h2 class="sec-title" data-reveal>Lo revisamos por ti, cada 30 segundos.</h2>
+        <p class="sec-sub" data-reveal style="margin-bottom:0">No basta con que la página conteste. Tiene que verse completa y sus botones tienen que responder. Si no, no te molestamos.</p>
+        <ul class="facts" data-stagger>
+          <li data-reveal><b>Navegador real.</b> La vemos como la verías tú, con imagen en vivo.</li>
+          <li data-reveal><b>Desde tu conexión también.</b> Si el sitio bloquea visitas desde otros países o desde servidores, te lo decimos.</li>
+          <li data-reveal><b>Botones seguros.</b> Solo «Siguiente» o «Comenzar». Nunca enviamos ni compramos nada.</li>
+        </ul>
+      </div>
+      <div class="term" id="term" aria-label="Ejemplo de cómo trabaja">
+        <div class="cmd" data-line="500" data-type>vigilar https://encuestas.ejemplo.gob.ec/151341</div>
+        <div data-line="700"><span class="t">19:02:10</span>  abriendo en un navegador real…</div>
+        <div data-line="600"><span class="t">19:02:55</span>  <span class="bad">✕</span> no contestó (esperamos 45 segundos)</div>
+        <div data-line="600"><span class="t">19:03:25</span>  <span class="bad">✕</span> el sitio cortó la conexión</div>
+        <div data-line="600"><span class="t">19:03:55</span>  <span class="warn">!</span> se abrió, pero en blanco</div>
+        <div data-line="600"><span class="t">19:04:25</span>  <span class="warn">!</span> se abrió a medias: faltan partes</div>
+        <div data-line="500"><span class="t">19:04:55</span>  <span class="ok">✓</span> se ve completa</div>
+        <div data-line="500"><span class="t">19:04:57</span>  <span class="ok">✓</span> presionamos «Siguiente» y avanzó</div>
+        <div data-line="400"><span class="t">19:04:57</span>  <span class="go">→ aviso enviado a tu celular</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>{{SITE_NAME}} es una herramienta independiente. No está afiliada a los sitios que vigila.</span>
+    <span>solo botones seguros · nunca enviamos, compramos ni borramos nada</span>
+  </div>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const PILL = {funcionando:"✓ funciona", parcial:"! a medias", caida:"✕ no carga", comprobando:"revisando"};
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const mine = () => { try { return JSON.parse(localStorage.getItem("loadnt.mine") || "[]"); } catch(e){ return []; } };
+const shortPath = url => { try { const u = new URL(url), p = u.pathname + u.search; return p === "/" ? "" : p; } catch(e){ return ""; } };
+const row = (it, st) => `<li><a href="/v/${encodeURIComponent(it.id)}"><span style="min-width:0"><span class="host">${esc(it.host)}</span><span class="path">${esc(shortPath(it.url))}</span></span><span class="right">${st ? `<span class="pill ${st}">${PILL[st] || ""}</span>` : ""}<span class="go">→</span></span></a></li>`;
+
+async function showLists(){
+  let presets = [];
+  try { presets = (await (await fetch("/api/destacadas")).json()).items || []; } catch(e){}
+  if (presets.length){ $("presets").innerHTML = presets.map(p => row(p, p.status)).join(""); $("presetCard").hidden = false; }
+  const ids = new Set(presets.map(p => p.id));
+  const m = mine().filter(x => !ids.has(x.id)).slice(0, 6);
+  if (m.length){ $("mine").innerHTML = m.map(x => row(x)).join(""); $("mineCard").hidden = false; }
+  if (presets.length || m.length){ $("listsSec").hidden = false; FX.reveal(); }
+}
+async function loadTicker(){
+  try { const d = await (await fetch("/api/ticker")).json(); FX.ticker($("ticker"), d.events || []); } catch(e){ FX.ticker($("ticker"), []); }
+}
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const url = $("url").value.trim();
+  $("msg").textContent = "";
+  if (!url){ $("msg").textContent = "Pega un enlace primero."; $("url").focus(); return; }
+  $("go").disabled = true; $("go").textContent = "Revisando enlace…";
+  try {
+    const r = await fetch("/api/vigilar", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({url})});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "No se pudo empezar a vigilar ese enlace.");
+    location.href = "/v/" + d.id;
+  } catch(err){
+    $("msg").textContent = err.message === "Failed to fetch" ? "No hay conexión con el servidor. Intenta de nuevo." : err.message;
+    $("go").disabled = false; $("go").innerHTML = 'Vigilar página <span class="arr">→</span>';
+  }
+});
+
+FX.typePlaceholder($("url"), ["https://sitio.gob.ec/formulario", "https://citas.ejemplo.gov.co/agendar", "https://tramites.ejemplo.gob.mx/turno", "https://inscripciones.universidad.edu.pe", "https://encuestas.ejemplo.com/151341"]);
+FX.terminal($("term"));
+showLists(); loadTicker(); setInterval(loadTicker, 30000);
+</script>
+</body>
+</html>

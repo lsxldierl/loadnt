@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: loadnt
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: SITE_NAME
+        value: "Load'nt?"
+      - key: PRESET_URLS
+        value: https://encuestas.desarrollohumano.gob.ec/index.php/151341
+      - key: MAX_WATCHES
+        value: "8"
+      - key: CHECK_EVERY
+        value: "30"
+      - key: CHECKER_REGION
+        value: "Estados Unidos"
