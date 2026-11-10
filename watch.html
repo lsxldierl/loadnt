@@ -44,7 +44,7 @@
 .c-status{grid-area:status}.c-shot{grid-area:shot}.c-stats{grid-area:stats}.c-time{grid-area:time}.c-checks{grid-area:checks}
 
 .head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px}
-.st-big{font-weight:500;font-size:clamp(30px,3.6vw,42px);letter-spacing:-.03em;line-height:1.05;margin:16px 0 8px;min-height:1.05em}
+.st-big{font-weight:400;font-size:clamp(32px,3.8vw,46px);letter-spacing:-.035em;line-height:1.05;margin:16px 0 8px;min-height:1.05em}
 .summary{font-size:17px;margin:0;max-width:44ch;overflow-wrap:anywhere}
 .probe{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font:13.5px var(--mono)}
 .probe .v{color:var(--fg)}
@@ -62,11 +62,11 @@
 .flash.go::after{animation:flash 1.2s var(--ease)}
 @keyframes flash{0%{transform:scaleX(0);opacity:1}70%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
 
-.frame{border:1px solid var(--line-2);border-radius:2px;overflow:hidden;background:var(--raise)}
-.b-bar{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line-2);font:12px var(--mono)}
+.frame{border:1px solid var(--line-2);border-radius:0;overflow:hidden;background:transparent}
+.b-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-2);font:12px var(--mono)}
 .b-url{flex:1;min-width:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .b-url::before{content:"› ";color:var(--green)}
-.b-tag{display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--mono);padding:5px 8px;border-radius:2px;white-space:nowrap;color:var(--muted);background:var(--raise-2)}
+.b-tag{display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:5px 8px;border-radius:0;white-space:nowrap;color:var(--muted);background:var(--raise-2)}
 .b-tag.live{background:var(--ok-soft);color:var(--ok)}
 .b-tag.live::before{content:"";display:block;flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok);animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
@@ -91,7 +91,7 @@
 
 details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:24px}
 details summary::-webkit-details-marker{display:none}
-.sum-r{display:flex;align-items:center;gap:10px;font:13px var(--mono);min-width:0;text-align:right}
+.sum-r{display:flex;align-items:center;gap:10px;font:13px var(--sans);min-width:0;text-align:right}
 details summary .tag,.head .tag{white-space:nowrap}
 .chev{color:var(--dim);transition:transform .25s var(--ease)}
 details[open] .chev{transform:rotate(180deg)}
@@ -99,13 +99,13 @@ details[open] .chev{transform:rotate(180deg)}
 .checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding:9px 0;border-top:1px solid var(--line)}
 .checks .ck-l,.checks .ck-d{display:inline}
 .checks .ck-d::before{content:" · "}
-.ic{width:18px;height:18px;display:grid;place-items:center;font:600 11px/1 var(--mono);color:var(--dim);margin-top:2px}
-.ic.ok{background:var(--ok-soft);color:var(--ok)} .ic.warn{background:var(--warn-soft);color:var(--warn)} .ic.fail{background:var(--bad-soft);color:var(--bad)}
+.ic{width:18px;height:18px;display:grid;place-items:center;font:600 11px/1 var(--mono);color:var(--dim);margin-top:2px;border:1px solid var(--line-2)}
+.ic.ok{border-color:transparent;background:var(--ok-soft);color:var(--ok)} .ic.warn{border-color:transparent;background:var(--warn-soft);color:var(--warn)} .ic.fail{border-color:transparent;background:var(--bad-soft);color:var(--bad)}
 .ck-l{font-weight:500;font-size:15px}
 .ck-d{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .checks li.pending .ck-l,.checks li.skip .ck-l{color:var(--dim)}
 
-.cols ol{margin:0;padding-left:20px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:10px}
+.cols ol{margin:0;padding-left:20px;color:var(--muted);font-size:15px;display:flex;flex-direction:column;gap:12px}
 .cols ol b{color:var(--fg);font-weight:500}
 .offline{margin:16px 0 0;font:13px var(--mono);color:var(--bad)}
 
@@ -145,20 +145,20 @@ details[open] .chev{transform:rotate(180deg)}
       <svg class="logo seek" id="logo" viewBox="0 0 28 14" aria-hidden="true"><rect x="0" y="0" width="7.5" height="14"/><rect x="10.25" y="0" width="7.5" height="14"/><rect class="b3" x="21.25" y=".75" width="6" height="12.5"/></svg>
       {{SITE_NAME}}
     </a>
-    <a class="navlink" href="/">+ otra página</a>
+    <a class="navlink" href="/">+ Otra página</a>
   </div>
 </nav>
 
 <section class="hero">
   <div class="ticker" id="ticker" aria-hidden="true"></div>
   <div class="wrap">
-    <p class="eyebrow" id="eyebrow">cargando…</p>
+    <p class="eyebrow" id="eyebrow">Cargando…</p>
     <h1><span class="line"><span>¿Ya cargó esta página?</span></span><span class="line" style="--l:1"><span class="answer" id="answer">Revisando…</span></span></h1>
     <div class="hero-row">
       <p class="sub" id="sub">La revisamos cada 30 segundos y te avisamos al celular apenas cargue.</p>
       <div class="actions">
         <a class="btn" href="#avisos">Avísame <span class="arr">→</span></a>
-        <a class="tlink" id="openBtn" href="#" target="_blank" rel="noopener">abrir página ↗</a>
+        <a class="tlink" id="openBtn" href="#" target="_blank" rel="noopener">Abrir página ↗</a>
       </div>
     </div>
     <p class="offline" id="offline" hidden>Sin conexión con {{SITE_NAME}}. Reintentando…</p>
@@ -169,10 +169,10 @@ details[open] .chev{transform:rotate(180deg)}
   <div class="wrap">
     <section class="live" aria-label="Estado en vivo">
       <div class="cell c-status flash" id="statusCell">
-        <div class="head"><span class="tag">ahora mismo</span><span class="pill comprobando" id="pill"><span class="spin"></span>revisando</span></div>
+        <div class="head"><span class="tag">Ahora mismo</span><span class="pill comprobando" id="pill"><span class="spin"></span>Revisando</span></div>
         <div class="st-big" id="statusText">Revisando</div>
         <p class="summary" id="summary">Haciendo la primera revisión…</p>
-        <div class="probe"><span class="tag">desde tu conexión</span><span class="v dim" id="probeText">probando…</span></div>
+        <div class="probe"><span class="tag">Desde tu conexión</span><span class="v dim" id="probeText">Probando…</span></div>
         <div class="notes" id="notes"></div>
         <div class="idle" id="idle">
           <div><span style="color:var(--green)">$ </span><span class="t1" id="idleCmd">abrir la página</span></div>
@@ -182,9 +182,9 @@ details[open] .chev{transform:rotate(180deg)}
         <div class="bottom">
           <div class="minutes" aria-label="Resultado de cada minuto, la última hora">
             <div class="ticks" id="ticks"></div>
-            <div class="ticks-legend"><span>hace 60 min</span><span id="ticksSum"></span><span>ahora</span></div>
+            <div class="ticks-legend"><span>Hace 60 min</span><span id="ticksSum"></span><span>Ahora</span></div>
           </div>
-          <div class="next"><span id="nextText">próxima revisión en —</span><div class="bar"><i id="bar"></i></div></div>
+          <div class="next"><span id="nextText">Próxima revisión en —</span><div class="bar"><i id="bar"></i></div></div>
         </div>
       </div>
 
@@ -210,14 +210,14 @@ details[open] .chev{transform:rotate(180deg)}
       </div>
 
       <div class="cell c-time">
-        <div class="head"><span class="tag">historial</span><span class="tag">últimas 24 horas</span></div>
+        <div class="head"><span class="tag">Historial</span><span class="tag" style="color:var(--dim)">Últimas 24 h</span></div>
         <div class="story" id="story"><span>Todavía no hay datos. Aquí te contaremos cómo le ha ido a esta página.</span></div>
         <div class="recent" id="recent"></div>
       </div>
 
       <div class="cell c-checks">
       <details id="checksBox">
-        <summary><span class="tag">qué probamos</span><span class="sum-r"><span id="checksSum">pendiente</span><span class="chev">▾</span></span></summary>
+        <summary><span class="tag">Qué probamos</span><span class="sum-r"><span id="checksSum">Pendiente</span><span class="chev">▾</span></span></summary>
         <ul class="checks" id="checks"></ul>
       </details>
       </div>
@@ -230,29 +230,29 @@ details[open] .chev{transform:rotate(180deg)}
       <p class="sec-sub" data-reveal>Solo avisamos cuando la página se abre completa y funciona.</p>
       <div class="cols" data-stagger>
         <div data-reveal id="ntfyCol">
-          <span class="tag green">recomendado · gratis, sin cuenta</span>
+          <span class="tag green">Recomendado · Gratis</span>
           <h3>En tu celular</h3>
           <ol>
             <li>Instala la app <b>ntfy</b>.
-              <div class="links" style="margin-top:8px"><a class="tlink" href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">android ↗</a><a class="tlink" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iphone ↗</a></div></li>
+              <div class="links" style="margin-top:8px"><a class="tlink" href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android ↗</a><a class="tlink" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone ↗</a></div></li>
             <li>Toca <b>+</b> y suscríbete a este tema:
-              <div class="chip" style="margin-top:8px"><code id="topic">…</code><button class="tlink" id="copyTopic" type="button">copiar</button></div></li>
+              <div class="chip" style="margin-top:8px"><code id="topic">…</code><button class="tlink" id="copyTopic" type="button">Copiar</button></div></li>
             <li>Listo. Te llega aunque tengas el celular bloqueado.</li>
           </ol>
-          <div class="links"><a class="tlink dim" id="ntfyWeb" href="#" target="_blank" rel="noopener">¿en computadora? recíbelo en el navegador ↗</a></div>
+          <div class="links"><a class="tlink dim" id="ntfyWeb" href="#" target="_blank" rel="noopener">¿En computadora? Recíbelo en el navegador ↗</a></div>
         </div>
         <div data-reveal>
-          <span class="tag">con la pestaña abierta</span>
+          <span class="tag">Con la pestaña abierta</span>
           <h3>En esta pestaña</h3>
           <p>Suena una alarma, vibra (en Android) y aparece una notificación en cuanto cargue.</p>
-          <button class="btn" id="alertBtn" type="button" style="align-self:flex-start">Activar alarma</button>
+          <button class="btn" id="alertBtn" type="button" style="align-self:flex-start;margin-top:auto">Activar alarma</button>
         </div>
         <div data-reveal>
-          <span class="tag">para familia y amigos</span>
+          <span class="tag">Para familia y amigos</span>
           <h3>Compártela</h3>
           <p>Cualquiera con el enlace ve el estado en vivo y puede activar sus propios avisos.</p>
-          <div class="chip"><code id="shareUrl">…</code><button class="tlink" id="copyShare" type="button">copiar</button></div>
-          <div class="links"><a class="tlink" id="waLink" href="#" target="_blank" rel="noopener">enviar por whatsapp ↗</a></div>
+          <div class="chip"><code id="shareUrl">…</code><button class="tlink" id="copyShare" type="button">Copiar</button></div>
+          <div class="links"><a class="tlink" id="waLink" href="#" target="_blank" rel="noopener">Enviar por WhatsApp ↗</a></div>
         </div>
       </div>
     </div>
@@ -262,7 +262,7 @@ details[open] .chev{transform:rotate(180deg)}
 <footer>
   <div class="wrap">
     <span>{{SITE_NAME}} es una herramienta independiente. No está afiliada a los sitios que revisa.</span>
-    <span>solo botones seguros · nunca enviamos, compramos ni borramos nada</span>
+    <span>Solo botones seguros. Nunca enviamos, compramos ni borramos nada.</span>
   </div>
 </footer>
 
@@ -290,10 +290,10 @@ let alertsOn = false, lastStatus = null, audioCtx = null, snap = null, fetchedAt
 let probe = {state: "pending"};
 
 const L = {
-  funcionando: {answer:"¡Sí! Entra ya.", big:"Funciona", pill:"✓ funciona", since:"Funcionando desde hace"},
-  parcial:     {answer:"Carga a medias.", big:"Carga a medias", pill:"! a medias", since:"A medias desde hace"},
-  caida:       {answer:"Todavía no.", big:"No carga", pill:"✕ no carga", since:"Caída desde hace"},
-  comprobando: {answer:"Revisando…", big:"Revisando", pill:'<span class="spin"></span>revisando', since:"Revisando desde hace"}
+  funcionando: {answer:"¡Sí! Entra ya.", big:"Funciona", pill:"Funciona", since:"Funcionando desde hace"},
+  parcial:     {answer:"Carga a medias.", big:"Carga a medias", pill:"A medias", since:"A medias desde hace"},
+  caida:       {answer:"Todavía no.", big:"No carga", pill:"No carga", since:"Caída desde hace"},
+  comprobando: {answer:"Revisando…", big:"Revisando", pill:'<span class="spin"></span>Revisando', since:"Revisando desde hace"}
 };
 const ICON = {ok:"✓", warn:"!", fail:"✕", pending:"·", skip:"–"};
 const hm = new Intl.DateTimeFormat(undefined, {hour:"2-digit", minute:"2-digit"});
@@ -351,9 +351,9 @@ $("alertBtn").addEventListener("click", async () => {
 });
 function copyBtn(btnId, codeId){
   $(btnId).addEventListener("click", async () => {
-    try{ await navigator.clipboard.writeText($(codeId).textContent); $(btnId).textContent = "copiado ✓"; }
-    catch(e){ const r = document.createRange(); r.selectNodeContents($(codeId)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $(btnId).textContent = "seleccionado"; }
-    setTimeout(() => $(btnId).textContent = "copiar", 2500);
+    try{ await navigator.clipboard.writeText($(codeId).textContent); $(btnId).textContent = "Copiado ✓"; }
+    catch(e){ const r = document.createRange(); r.selectNodeContents($(codeId)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $(btnId).textContent = "Seleccionado"; }
+    setTimeout(() => $(btnId).textContent = "Copiar", 2500);
   });
 }
 copyBtn("copyTopic", "topic"); copyBtn("copyShare", "shareUrl");
@@ -375,10 +375,10 @@ async function runProbe(){
 function renderDiag(){
   if (!snap) return;
   const st = snap.status, pt = $("probeText");
-  if (probe.running && probe.state === "pending") { pt.className = "v dim"; pt.textContent = "probando…"; }
-  else if (probe.state === "ok") { pt.className = "v ok"; pt.textContent = `✓ te responde (${(probe.ms/1000).toFixed(1).replace(".", ",")} s)`; }
-  else if (probe.state === "fail") { pt.className = "v bad"; pt.textContent = probe.timeout ? "✕ no te responde (25 s sin respuesta)" : "✕ no te responde"; }
-  else if (probe.state === "na") { pt.className = "v dim"; pt.textContent = "no se puede probar (el sitio no usa https)"; }
+  if (probe.running && probe.state === "pending") { pt.className = "v dim"; pt.textContent = "Probando…"; }
+  else if (probe.state === "ok") { pt.className = "v ok"; pt.textContent = `✓ Te responde (${(probe.ms/1000).toFixed(1).replace(".", ",")} s)`; }
+  else if (probe.state === "fail") { pt.className = "v bad"; pt.textContent = probe.timeout ? "✕ No te responde (25 s sin respuesta)" : "✕ No te responde"; }
+  else if (probe.state === "na") { pt.className = "v dim"; pt.textContent = "No se puede probar (el sitio no usa https)"; }
 
   const items = [];
   // What the comparison between our checker and the visitor's connection means
@@ -442,27 +442,27 @@ function render(){
     ? "Está funcionando. Entra y termina lo que tengas que hacer antes de que se vuelva a caer."
     : "La revisamos cada 30 segundos y te avisamos al celular apenas cargue.";
   $("pill").className = "pill " + (paused ? "pausa" : st);
-  $("pill").innerHTML = paused ? "en pausa" : T.pill;
+  $("pill").innerHTML = paused ? "En pausa" : T.pill;
   $("summary").textContent = s.summary;
 
   // last 60 minutes
   const mins = s.minutes || [];
   $("ticks").innerHTML = mins.map((m, i) => `<i class="${m || ""}${i === mins.length - 1 ? " last" : ""}" title="hace ${mins.length - 1 - i} min"></i>`).join("");
   const upMin = mins.filter(m => m === "funcionando").length, checked = mins.filter(Boolean).length;
-  $("ticksSum").textContent = checked ? (upMin ? `funcionó ${upMin} de ${checked} minutos` : "no cargó en la última hora") : "";
+  $("ticksSum").textContent = checked ? (upMin ? `Funcionó ${upMin} de ${checked} min` : "No cargó en la última hora") : "";
   FX.ticker($("ticker"), (s.recent || []).slice().reverse().map(r => [r[0], "", r[1], r[2]]));
 
   // screenshot
   if (s.has_capture && s.capture_t){
     if (s.capture_t !== lastCapT){ $("shot").classList.add("loading"); $("shot").src = `/api/captura/${WID}.jpg?t=${s.capture_t}`; lastCapT = s.capture_t; }
     $("shot").hidden = false; $("shotEmpty").hidden = true;
-    $("bTag").textContent = s.capture_live ? "en vivo" : "anterior";
+    $("bTag").textContent = s.capture_live ? "En vivo" : "Anterior";
     $("bTag").className = "b-tag" + (s.capture_live ? " live" : "");
     $("bCap").textContent = s.capture_live
       ? `Así se veía ${ago(now - s.capture_t)}, vista desde ${s.region}.`
       : `No cargó en la última revisión. Esta es la imagen anterior, de ${ago(now - s.capture_t)}.`;
   } else {
-    $("bTag").textContent = "sin imagen"; $("bTag").className = "b-tag";
+    $("bTag").textContent = "Sin imagen"; $("bTag").className = "b-tag";
     $("bCap").textContent = s.mode === "navegador" ? "La página todavía no ha mostrado nada." : "Las imágenes necesitan el modo navegador.";
   }
 
@@ -521,7 +521,7 @@ function render(){
   // tests
   const failed = s.steps.find(x => x.state === "fail");
   const done = s.steps.filter(x => x.state !== "pending" && x.state !== "skip");
-  $("checksSum").textContent = failed ? `falló en «${failed.label}»` : done.length ? `pasó ${done.length} de ${s.steps.length} pruebas` : "pendiente";
+  $("checksSum").textContent = failed ? `Falló en «${failed.label}»` : done.length ? `Pasó ${done.length} de ${s.steps.length} pruebas` : "Pendiente";
   $("checks").innerHTML = s.steps.map(x =>
     `<li class="${x.state}"><span class="ic ${x.state}">${ICON[x.state] || "·"}</span><div><div class="ck-l">${esc(x.label)}</div><div class="ck-d">${esc(x.detail)}</div></div></li>`).join("");
 
@@ -540,8 +540,8 @@ function tick(){
   if (!snap) return;
   const now = snap.now + (Date.now()/1000 - fetchedAt), left = snap.next_check_at - now;
   $("frame").classList.toggle("checking", snap.active && left <= 1);
-  if (!snap.active){ $("nextText").textContent = "en pausa"; $("bar").style.width = "0"; return; }
-  $("nextText").textContent = left > 1 ? `próxima revisión en ${Math.ceil(left)} s` : "revisando ahora…";
+  if (!snap.active){ $("nextText").textContent = "En pausa"; $("bar").style.width = "0"; return; }
+  $("nextText").textContent = left > 1 ? `Próxima revisión en ${Math.ceil(left)} s` : "Revisando ahora…";
   $("bar").style.width = (left > 0 ? Math.max(0, Math.min(100, 100 - left / snap.check_every * 100)) : 100).toFixed(1) + "%";
 }
 
@@ -558,8 +558,8 @@ function showMissing(msg){
   FX.decode($("answer"), "No la encontramos.");
   $("statusText").textContent = "Sin datos";
   $("summary").textContent = msg || "El servidor se reinició y no tenemos el enlace de esta página.";
-  $("sub").innerHTML = 'Pega el enlace otra vez en el inicio y sigue igual que antes. <a class="tlink" href="/">ir al inicio →</a>';
-  $("nextText").textContent = "detenida";
+  $("sub").innerHTML = 'Pega el enlace otra vez en el inicio y sigue igual que antes. <a class="tlink" href="/">Ir al inicio →</a>';
+  $("nextText").textContent = "Detenida";
 }
 async function recover(){
   if (recovering) return;
