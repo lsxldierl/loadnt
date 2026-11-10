@@ -2,7 +2,7 @@
 
 Watches a website that keeps failing to load and notifies you when it works.
 
-I made this for the Ministerio de Desarrollo Humano survey site in Ecuador, which times out, resets connections or loads half broken most of the day. It works with any URL.
+Useful for overloaded sites like government forms, surveys, appointment booking or ticket sales that time out, reset connections or load half broken most of the day. Anyone can paste any URL.
 
 UI is in Spanish.
 

@@ -390,7 +390,7 @@ class BrowserChecker:
                     self.contexts.pop(old).close()
                 except Exception:
                     pass
-            ctx = self.browser.new_context(viewport={"width": 1280, "height": 860}, locale="es-EC",
+            ctx = self.browser.new_context(viewport={"width": 1280, "height": 860}, locale="es-419",
                                            ignore_https_errors=True, user_agent=UA, accept_downloads=False)
             self.contexts[key] = ctx
         return ctx
@@ -561,7 +561,7 @@ def _mobile_check(self, url):
     """Open the page as a phone would. Returns {ok, t, detail}."""
     self.ensure()
     ctx = self.browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True,
-                                   has_touch=True, locale="es-EC", ignore_https_errors=True, user_agent=MOBILE_UA)
+                                   has_touch=True, locale="es-419", ignore_https_errors=True, user_agent=MOBILE_UA)
     page = ctx.new_page()
     page.route("**/*", lambda r: r.continue_() if r.request.url.startswith(("data:", "blob:")) or
                host_is_public(urllib.parse.urlsplit(r.request.url).hostname or "") is not False else r.abort("blockedbyclient"))
@@ -597,7 +597,7 @@ BrowserChecker.mobile = _mobile_check
 def basic_run(url, want_click=False):
     steps = {k: step(k, "skip", "Solo con el modo navegador") for k, _ in STEP_LABELS}
     out = {"steps": steps, "jpg": None, "click": None, "ms": None, "notes": [], "err": None, "pass": False}
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "es-EC,es;q=0.9"})
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "es-419,es;q=0.9,en;q=0.8"})
     t0 = time.time()
     try:
         try:
