@@ -254,7 +254,7 @@ const L = {
   comprobando: {answer:"Revisando…", big:"Revisando", pill:'<span class="spin"></span>revisando', since:"Vigilando desde hace"}
 };
 const ICON = {ok:"✓", warn:"!", fail:"✕", pending:"·", skip:"–"};
-const hm = new Intl.DateTimeFormat("es-EC", {hour:"2-digit", minute:"2-digit"});
+const hm = new Intl.DateTimeFormat(undefined, {hour:"2-digit", minute:"2-digit"});
 const at = t => hm.format(new Date(t * 1000));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function dur(sec){

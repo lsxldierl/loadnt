@@ -46,7 +46,7 @@
 
   // --- ticker of real check results behind the hero
   const MARK = { funcionando: ["✓", "ok"], parcial: ["!", "warn"], caida: ["✕", "bad"], comprobando: ["·", ""] };
-  const hm = new Intl.DateTimeFormat("es-EC", { hour: "2-digit", minute: "2-digit", hour12: false });
+  const hm = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
   function ticker(el, events) {
     if (!el) return;
     const items = (events.length ? events : [[Date.now() / 1000, "", "comprobando", "esperando la primera revisión"]])
