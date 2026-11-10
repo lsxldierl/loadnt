@@ -18,18 +18,24 @@
   grid-template-areas:"status shot" "stats stats" "time checks";border-bottom:1px solid var(--line)}
 .c-status{display:flex;flex-direction:column}
 .c-status .bottom{margin-top:auto;padding-top:var(--g)}
-/* idle scene: fills the status column when there's nothing to explain */
-.idle{flex:1;display:flex;flex-direction:column;gap:14px;padding-top:var(--g);min-height:220px}
-.idle canvas{flex:1;width:100%;min-height:180px;display:block}
-.idle p{margin:0;font:13.5px/1.6 var(--mono);color:var(--muted);max-width:46ch}
-.idle p b{color:var(--fg);font-weight:500}
-/* history column: timeline + response time */
+/* idle: one terminal line, shown when there is nothing to explain */
+.idle{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;padding-top:var(--g);min-height:150px;font:15px/1.6 var(--mono)}
+.idle .t1{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;max-width:100%;animation:type 8s steps(var(--n,30),end) infinite}
+.idle .t2{color:var(--muted);animation:l2 8s linear infinite}
+.idle .t3{animation:l3 8s linear infinite}
+.idle .cur{display:inline-block;width:.6em;height:1.1em;background:currentColor;vertical-align:-.2em;margin-left:3px;animation:caret 1s steps(1) infinite}
+@keyframes type{0%{width:0}22%,100%{width:calc(var(--n,30) * 1ch)}}
+@keyframes l2{0%,28%{opacity:0}32%,100%{opacity:1}}
+@keyframes l3{0%,62%{opacity:0}66%,100%{opacity:1}}
+@media (max-width:900px){.idle{min-height:0;padding-top:24px;font-size:14px}}
+@media (prefers-reduced-motion:reduce){.idle .t1,.idle .t2,.idle .t3,.idle .cur{animation:none}}
+/* history: a few plain sentences */
 .c-time{display:flex;flex-direction:column}
-.c-checks{display:flex;flex-direction:column}
-.rt{display:flex;flex-direction:column;gap:12px;margin-top:var(--g);padding-top:var(--g);border-top:1px solid var(--line)}
-.rt canvas{width:100%;height:150px;display:block}
-.rt .rt-note{font:12px var(--mono);color:var(--dim)}
-@media (max-width:900px){.idle{min-height:0;padding-top:24px}.idle canvas{min-height:0;flex:none;height:170px}.rt canvas{height:140px}}
+.story{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;margin:var(--g) 0;font-size:24px;line-height:1.3;letter-spacing:-.015em;font-weight:500;color:var(--muted)}
+.story .n{font-family:var(--mono);font-weight:500;letter-spacing:-.02em}
+.story .w{color:var(--fg)} .story .g{color:var(--ok)} .story .r{color:var(--bad)} .story .o{color:var(--warn)}
+.recent{font:12.5px/1.7 var(--mono);color:var(--dim);border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:900px){.story{font-size:20px;margin:24px 0}}
 .st-big.funcionando{color:var(--ok)} .st-big.parcial{color:var(--warn)} .st-big.caida{color:var(--bad)}
 .cell{padding:var(--g) var(--g) var(--g) 0;min-width:0}
 .c-shot,.c-checks{padding:var(--g) 0 var(--g) var(--g);border-left:1px solid var(--line)}
@@ -82,16 +88,6 @@
 .meter{height:2px;background:var(--line-2);margin-top:12px;overflow:hidden}
 .meter i{display:block;height:100%;background:var(--ok);width:0;transition:width .8s var(--ease)}
 
-.day-sum{margin:14px 0 0;font-size:15px}
-.day-sum b{font-weight:500}
-.day-sum .best{color:var(--ok)}
-.daymap{width:100%;height:260px;display:block;margin-top:18px}
-.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font:11px var(--mono);color:var(--dim)}
-.legend i{display:inline-block;width:8px;height:8px;margin-right:6px;vertical-align:0}
-.changes{list-style:none;margin:18px 0 0;padding:0;font:12.5px/1.5 var(--mono);color:var(--muted)}
-.changes li{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
-.changes li span:first-child{color:var(--dim);min-width:72px}
-.changes .f{color:var(--ok)} .changes .p{color:var(--warn)} .changes .c{color:var(--bad)}
 
 details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:24px}
 details summary::-webkit-details-marker{display:none}
@@ -178,9 +174,10 @@ details[open] .chev{transform:rotate(180deg)}
         <p class="summary" id="summary">Haciendo la primera revisión…</p>
         <div class="probe"><span class="tag">desde tu conexión</span><span class="v dim" id="probeText">probando…</span></div>
         <div class="notes" id="notes"></div>
-        <div class="idle comprobando" id="idle">
-          <canvas id="pingCanvas" aria-hidden="true"></canvas>
-          <p id="idleText"><b>Primera revisión en curso.</b> Puede tardar hasta un minuto.</p>
+        <div class="idle" id="idle">
+          <div><span style="color:var(--green)">$ </span><span class="t1" id="idleCmd">abrir la página</span></div>
+          <div class="t2" id="idleWait">  esperando respuesta…</div>
+          <div class="t3" id="idleRes">  …<span class="cur"></span></div>
         </div>
         <div class="bottom">
           <div class="minutes" aria-label="Resultado de cada minuto, la última hora">
@@ -213,11 +210,9 @@ details[open] .chev{transform:rotate(180deg)}
       </div>
 
       <div class="cell c-time">
-        <div class="head"><span class="tag">últimas 24 horas</span></div>
-        <p class="day-sum" id="daySum">Todavía no hay datos. Cada cuadro es un minuto; se van llenando con cada revisión.</p>
-        <canvas class="daymap" id="dayMap" aria-label="Mapa de las últimas 24 horas, una fila por hora y un cuadro por minuto"></canvas>
-        <div class="legend"><span><i style="background:var(--ok)"></i>funciona</span><span><i style="background:var(--warn)"></i>a medias</span><span><i style="background:var(--bad)"></i>no carga</span><span><i style="background:var(--raise-2)"></i>sin revisar</span></div>
-        <ul class="changes" id="changes"></ul>
+        <div class="head"><span class="tag">historial</span><span class="tag">últimas 24 horas</span></div>
+        <div class="story" id="story"><span>Todavía no hay datos. Aquí te contaremos cómo le ha ido a esta página.</span></div>
+        <div class="recent" id="recent"></div>
       </div>
 
       <div class="cell c-checks">
@@ -225,10 +220,6 @@ details[open] .chev{transform:rotate(180deg)}
         <summary><span class="tag">qué probamos</span><span class="sum-r"><span id="checksSum">pendiente</span><span class="chev">▾</span></span></summary>
         <ul class="checks" id="checks"></ul>
       </details>
-      <div class="rt">
-        <div class="head"><span class="tag">tiempo de respuesta</span><span class="rt-note" id="rtNote"></span></div>
-        <canvas id="rtCanvas" aria-label="Tiempo de respuesta de cada revisión en la última hora"></canvas>
-      </div>
       </div>
     </section>
   </div>
@@ -412,17 +403,18 @@ function renderDiag(){
     items.push({cls: n.kind === "maintenance" || n.kind === "slow" ? "info" : "", title:n.title, text:n.text});
   });
   $("notes").innerHTML = items.slice(0, 3).map(n => `<div class="note ${n.cls}"><b>${esc(n.title)}</b><p>${esc(n.text)}</p></div>`).join("");
-  const IDLE = {
-    caida: "<b>No hay nada que puedas hacer por ahora.</b> El sitio no responde; seguimos intentando y te avisamos apenas cargue.",
-    parcial: "<b>Carga, pero incompleta.</b> Si entras, recarga varias veces hasta que se vea bien.",
-    funcionando: "<b>Todo en orden.</b> Entra ahora y termina lo que necesites mientras dure.",
-    comprobando: "<b>Primera revisión en curso.</b> Puede tardar hasta un minuto."
-  };
-  const idle = $("idle"), stKey = !snap.active ? "comprobando" : (IDLE[st] ? st : "comprobando");
+  const idle = $("idle");
   idle.hidden = items.length > 0;
-  idle.className = "idle " + stKey;
-  if (!idle.hidden){ window._ping = window._ping || FX.ping($("pingCanvas")); window._ping.set(stKey, snap.host); }
-  $("idleText").innerHTML = !snap.active ? "<b>En pausa.</b> Nadie la ha visto en un rato; se reanuda sola al abrir esta página." : IDLE[stKey];
+  const cmd = "abrir " + snap.host;
+  if ($("idleCmd").textContent !== cmd){ $("idleCmd").textContent = cmd; $("idleCmd").style.setProperty("--n", cmd.length); }
+  const RES = {
+    funcionando: ["var(--ok)", "✓ " + (snap.summary || "funciona").replace(/^¡Funciona! /, "").toLowerCase()],
+    parcial: ["var(--warn)", "! " + (snap.summary || "").toLowerCase()],
+    caida: ["var(--bad)", "✕ " + (snap.summary || "").toLowerCase()],
+    comprobando: ["var(--muted)", "· primera revisión en curso"]
+  }[st] || ["var(--muted)", "· revisando"];
+  $("idleRes").style.color = RES[0];
+  $("idleRes").innerHTML = "  " + esc(!snap.active ? "· en pausa: abre esta página para reanudar" : RES[1]) + '<span class="cur"></span>';
 }
 
 function render(){
@@ -496,38 +488,35 @@ function render(){
     $("speedNote").textContent = sec > 15 ? "ten paciencia al abrirla" : "cuando responde";
   } else { $("speed").textContent = "—"; $("speedNote").textContent = "no respondió en la última hora"; }
 
-  // last 24 hours
-  FX.dayMap($("dayMap"), s.day || "", now);
-  const dayStr = s.day || "", seen = dayStr.replace(/\./g, "").length, upMins = (dayStr.match(/f/g) || []).length;
-  if (seen){
-    const byHour = {};
-    for (let i = 0; i < dayStr.length; i++){
-      const ch = dayStr[i]; if (ch === ".") continue;
-      const hh = new Date((now - i * 60) * 1000).getHours();
-      byHour[hh] = byHour[hh] || {up:0, all:0}; byHour[hh].all++; if (ch === "f") byHour[hh].up++;
+  // history in a few sentences
+  const day = s.day || "", seenMin = day.replace(/\./g, "").length;
+  const span2 = m => m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? " " + (m % 60) + " min" : ""}`;
+  const parts = [];
+  if (seenMin){
+    const upMin = (day.match(/f/g) || []).length;
+    let falls = 0;                                   // outages of 2+ minutes that came after it was up
+    for (let i = day.length - 1; i > 1; i--) if (day[i] !== "c" && day[i] !== "." && day[i - 1] === "c" && day[i - 2] === "c") falls++;
+    if (upMin) parts.push(`Funcionó <span class="n g">${span2(upMin)}</span> en total` + (falls ? ` y se cayó <span class="n r">${falls} ${falls === 1 ? "vez" : "veces"}</span>.` : "."));
+    else parts.push(`No ha funcionado en las <span class="n w">${span2(seenMin)}</span> que la llevamos revisando.`);
+    if (st === "funcionando") parts.push(`Ahora mismo funciona, desde las <span class="n w">${at(s.status_since)}</span>.`);
+    else if (s.last_up_at && s.up_window && s.up_window.end){
+      const len = Math.max(1, Math.round((s.up_window.end - s.up_window.start) / 60));
+      parts.push(`La última vez fue a las <span class="n w">${at(s.last_up_at)}</span>, durante <span class="n w">${span2(len)}</span>.`);
     }
-    const good = Object.entries(byHour).filter(([h, v]) => v.all >= 5).sort((a, b) => b[1].up / b[1].all - a[1].up / a[1].all);
-    const pct = Math.round(upMins / seen * 100);
-    let txt = `Funcionó <b>${pct}%</b> de los minutos revisados.`;
-    if (good.length >= 3 && good[0][1].up > 0 && pct < 95){
-      const h = +good[0][0];
-      txt += ` Mejor hora hasta ahora: <b class="best">${String(h).padStart(2, "0")}:00–${String((h + 1) % 24).padStart(2, "0")}:00</b>.`;
-    } else if (seen < 180) txt += " Con más horas de datos te diremos a qué hora suele funcionar.";
-    $("daySum").innerHTML = txt;
+    const byPart = {madrugada:[0,0], "la mañana":[0,0], "la tarde":[0,0], "la noche":[0,0]};
+    for (let i = 0; i < day.length; i++){
+      if (day[i] === ".") continue;
+      const h = new Date((now - i * 60) * 1000).getHours();
+      const k = h < 6 ? "madrugada" : h < 12 ? "la mañana" : h < 19 ? "la tarde" : "la noche";
+      byPart[k][1]++; if (day[i] === "f") byPart[k][0]++;
+    }
+    const ranked = Object.entries(byPart).filter(([, v]) => v[1] >= 60).sort((a, b) => b[1][0] / b[1][1] - a[1][0] / a[1][1]);
+    if (ranked.length >= 2 && ranked[0][1][0] > 0 && upMin < seenMin * 0.95) parts.push(`Suele funcionar <span class="w">${ranked[0][0] === "madrugada" ? "de madrugada" : "por " + ranked[0][0]}</span>.`);
+    else if (seenMin < 240) parts.push(`Con unas horas más de datos te diremos a qué hora suele funcionar.`);
   }
-  const CODE = {funcionando:"f", parcial:"p", caida:"c"};
-  const VERB = {funcionando:"empezó a funcionar", parcial:"cargó a medias", caida:"se cayó"};
-  $("changes").innerHTML = (s.timeline || []).slice(0, 5).map((g, i) =>
-    `<li><span>${at(g.start)}</span><span class="${CODE[g.status] || ""}">${i === 0 ? "● " : ""}${VERB[g.status] || g.text}</span><span style="margin-left:auto;color:var(--dim)">${i === 0 ? dur(now - g.start) : dur(Math.max(60, g.end - g.start))}</span></li>`).join("");
-
-  // response time (last hour)
-  const rt = s.rt || [];
-  FX.rtChart($("rtCanvas"), rt, now);
-  const answered = rt.filter(x => x[2] != null && x[1] !== "caida").map(x => x[2] / 1000).sort((a, b) => a - b);
-  const downs = rt.length - answered.length;
-  $("rtNote").textContent = answered.length
-    ? `mediana ${answered[Math.floor(answered.length / 2)].toFixed(1).replace(".", ",")} s · máx ${answered[answered.length - 1].toFixed(1).replace(".", ",")} s` + (downs ? ` · ${downs} sin respuesta` : "")
-    : (rt.length ? `${rt.length} sin respuesta` : "");
+  if (parts.length) $("story").innerHTML = parts.map(p => `<span>${p}</span>`).join("");
+  const VERB = {funcionando:"volvió", parcial:"cargó a medias", caida:"se cayó"};
+  $("recent").textContent = (s.timeline || []).slice(0, 5).map(g => `${at(g.start)} ${VERB[g.status] || ""}`).join("  ·  ");
 
   // tests
   const failed = s.steps.find(x => x.state === "fail");
