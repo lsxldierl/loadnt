@@ -19,16 +19,17 @@
 .c-status{display:flex;flex-direction:column}
 .c-status .bottom{margin-top:auto;padding-top:var(--g)}
 /* idle scene: fills the status column when there's nothing to explain */
-.idle{flex:1;display:flex;flex-direction:column;gap:14px;padding-top:var(--g);min-height:150px}
-.idle canvas{flex:1;width:100%;min-height:110px;display:block}
+.idle{flex:1;display:flex;flex-direction:column;gap:14px;padding-top:var(--g);min-height:220px}
+.idle canvas{flex:1;width:100%;min-height:180px;display:block}
 .idle p{margin:0;font:13.5px/1.6 var(--mono);color:var(--muted);max-width:46ch}
 .idle p b{color:var(--fg);font-weight:500}
 /* history column: timeline + response time */
 .c-time{display:flex;flex-direction:column}
-.rt{flex:1;display:flex;flex-direction:column;gap:12px;margin-top:var(--g);padding-top:var(--g);border-top:1px solid var(--line);min-height:170px}
-.rt canvas{flex:1;width:100%;min-height:120px;display:block}
+.c-checks{display:flex;flex-direction:column}
+.rt{display:flex;flex-direction:column;gap:12px;margin-top:var(--g);padding-top:var(--g);border-top:1px solid var(--line)}
+.rt canvas{width:100%;height:150px;display:block}
 .rt .rt-note{font:12px var(--mono);color:var(--dim)}
-@media (max-width:900px){.idle{min-height:0;padding-top:24px}.idle canvas{min-height:96px;flex:none;height:96px}.rt canvas{flex:none;height:140px}}
+@media (max-width:900px){.idle{min-height:0;padding-top:24px}.idle canvas{min-height:0;flex:none;height:170px}.rt canvas{height:140px}}
 .st-big.funcionando{color:var(--ok)} .st-big.parcial{color:var(--warn)} .st-big.caida{color:var(--bad)}
 .cell{padding:var(--g) var(--g) var(--g) 0;min-width:0}
 .c-shot,.c-checks{padding:var(--g) 0 var(--g) var(--g);border-left:1px solid var(--line)}
@@ -81,15 +82,16 @@
 .meter{height:2px;background:var(--line-2);margin-top:12px;overflow:hidden}
 .meter i{display:block;height:100%;background:var(--ok);width:0;transition:width .8s var(--ease)}
 
-.tl{list-style:none;margin:16px 0 0;padding:0}
-.tl li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid var(--line)}
-.tl li:first-child{border-top:0;padding-top:0}
-.tl li.new{animation:tlIn .6s var(--ease)}
-@keyframes tlIn{from{opacity:0;transform:translateY(-6px)}}
-.dot{width:8px;height:8px;margin-top:7px;background:var(--dim)}
-.dot.funcionando{background:var(--ok)} .dot.parcial{background:var(--warn)} .dot.caida{background:var(--bad)}
-.tl .t1{font-weight:500;font-size:15px}
-.tl .t2{font:12.5px var(--mono);color:var(--muted)}
+.day-sum{margin:14px 0 0;font-size:15px}
+.day-sum b{font-weight:500}
+.day-sum .best{color:var(--ok)}
+.daymap{width:100%;height:260px;display:block;margin-top:18px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font:11px var(--mono);color:var(--dim)}
+.legend i{display:inline-block;width:8px;height:8px;margin-right:6px;vertical-align:0}
+.changes{list-style:none;margin:18px 0 0;padding:0;font:12.5px/1.5 var(--mono);color:var(--muted)}
+.changes li{display:flex;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.changes li span:first-child{color:var(--dim);min-width:72px}
+.changes .f{color:var(--ok)} .changes .p{color:var(--warn)} .changes .c{color:var(--bad)}
 
 details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:24px}
 details summary::-webkit-details-marker{display:none}
@@ -211,18 +213,23 @@ details[open] .chev{transform:rotate(180deg)}
       </div>
 
       <div class="cell c-time">
-        <div class="head"><span class="tag">historial</span></div>
-        <ul class="tl" id="timeline"><li><span class="dot"></span><div><div class="t1">Todavía no hay revisiones</div><div class="t2">la primera puede tardar un minuto</div></div></li></ul>
-        <div class="rt">
-          <div class="head"><span class="tag">tiempo de respuesta</span><span class="rt-note" id="rtNote"></span></div>
-          <canvas id="rtCanvas" aria-label="Tiempo de respuesta de cada revisión en la última hora"></canvas>
-        </div>
+        <div class="head"><span class="tag">últimas 24 horas</span></div>
+        <p class="day-sum" id="daySum">Todavía no hay datos. Cada cuadro es un minuto; se van llenando con cada revisión.</p>
+        <canvas class="daymap" id="dayMap" aria-label="Mapa de las últimas 24 horas, una fila por hora y un cuadro por minuto"></canvas>
+        <div class="legend"><span><i style="background:var(--ok)"></i>funciona</span><span><i style="background:var(--warn)"></i>a medias</span><span><i style="background:var(--bad)"></i>no carga</span><span><i style="background:var(--raise-2)"></i>sin revisar</span></div>
+        <ul class="changes" id="changes"></ul>
       </div>
 
-      <details class="cell c-checks" id="checksBox">
+      <div class="cell c-checks">
+      <details id="checksBox">
         <summary><span class="tag">qué probamos</span><span class="sum-r"><span id="checksSum">pendiente</span><span class="chev">▾</span></span></summary>
         <ul class="checks" id="checks"></ul>
       </details>
+      <div class="rt">
+        <div class="head"><span class="tag">tiempo de respuesta</span><span class="rt-note" id="rtNote"></span></div>
+        <canvas id="rtCanvas" aria-label="Tiempo de respuesta de cada revisión en la última hora"></canvas>
+      </div>
+      </div>
     </section>
   </div>
 
@@ -489,17 +496,29 @@ function render(){
     $("speedNote").textContent = sec > 15 ? "ten paciencia al abrirla" : "cuando responde";
   } else { $("speed").textContent = "—"; $("speedNote").textContent = "no respondió en la última hora"; }
 
-  // timeline
-  if (s.timeline.length){
-    const top = s.timeline[0].status + s.timeline[0].start;
-    $("timeline").innerHTML = s.timeline.map((g, i) => {
-      const cur = i === 0, title = g.status === "funcionando" ? (cur ? "Funciona" : "Funcionó") : g.text, span = g.end - g.start;
-      const when = cur ? (g.count > 1 ? `desde las ${at(g.start)} (${dur(now - g.start)})` : `a las ${at(g.start)}`)
-                       : (g.count > 1 ? `de ${at(g.start)} a ${at(g.end)} (${span < 60 ? "menos de 1 min" : dur(span)})` : `a las ${at(g.start)}`);
-      return `<li class="${cur && lastTopSeg && lastTopSeg !== top ? "new" : ""}"><span class="dot ${g.status}"></span><div><div class="t1">${esc(title)}</div><div class="t2">${when}</div></div></li>`;
-    }).join("");
-    lastTopSeg = top;
+  // last 24 hours
+  FX.dayMap($("dayMap"), s.day || "", now);
+  const dayStr = s.day || "", seen = dayStr.replace(/\./g, "").length, upMins = (dayStr.match(/f/g) || []).length;
+  if (seen){
+    const byHour = {};
+    for (let i = 0; i < dayStr.length; i++){
+      const ch = dayStr[i]; if (ch === ".") continue;
+      const hh = new Date((now - i * 60) * 1000).getHours();
+      byHour[hh] = byHour[hh] || {up:0, all:0}; byHour[hh].all++; if (ch === "f") byHour[hh].up++;
+    }
+    const good = Object.entries(byHour).filter(([h, v]) => v.all >= 5).sort((a, b) => b[1].up / b[1].all - a[1].up / a[1].all);
+    const pct = Math.round(upMins / seen * 100);
+    let txt = `Funcionó <b>${pct}%</b> de los minutos revisados.`;
+    if (good.length >= 3 && good[0][1].up > 0 && pct < 95){
+      const h = +good[0][0];
+      txt += ` Mejor hora hasta ahora: <b class="best">${String(h).padStart(2, "0")}:00–${String((h + 1) % 24).padStart(2, "0")}:00</b>.`;
+    } else if (seen < 180) txt += " Con más horas de datos te diremos a qué hora suele funcionar.";
+    $("daySum").innerHTML = txt;
   }
+  const CODE = {funcionando:"f", parcial:"p", caida:"c"};
+  const VERB = {funcionando:"empezó a funcionar", parcial:"cargó a medias", caida:"se cayó"};
+  $("changes").innerHTML = (s.timeline || []).slice(0, 5).map((g, i) =>
+    `<li><span>${at(g.start)}</span><span class="${CODE[g.status] || ""}">${i === 0 ? "● " : ""}${VERB[g.status] || g.text}</span><span style="margin-left:auto;color:var(--dim)">${i === 0 ? dur(now - g.start) : dur(Math.max(60, g.end - g.start))}</span></li>`).join("");
 
   // response time (last hour)
   const rt = s.rt || [];

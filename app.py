@@ -960,6 +960,17 @@ def public_view(w, now):
     v["minutes"] = minutes_for(w, now)
     v["recent"] = [[h[0], h[1], h[3]] for h in w["history"][-24:]]
     v["rt"] = [[h[0], h[1], h[2]] for h in w["history"] if now - h[0] <= 3600]
+    # last 24 h, one char per minute (index 0 = this minute): f=works p=partial c=down .=no check
+    day = ["."] * 1440
+    code = {"funcionando": "f", "parcial": "p", "caida": "c"}
+    rank = {".": 0, "c": 1, "p": 2, "f": 3}
+    for h in w["history"]:
+        i = int((now - h[0]) // 60)
+        if 0 <= i < 1440:
+            c = code.get(h[1], ".")
+            if rank[c] > rank[day[i]]:
+                day[i] = c
+    v["day"] = "".join(day)
     v["region"] = CHECKER_REGION
     v["site_country"] = site_country(w["host"])
     v["has_capture"] = w["capture"] is not None
