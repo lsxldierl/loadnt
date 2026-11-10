@@ -33,6 +33,8 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:5
 .logo.seek .b3{animation:almost 1.8s ease-in-out infinite}
 .logo.live .b3{fill:var(--green);stroke:var(--green)}
 .logo.live rect{fill:var(--green)}
+.logo.half rect{fill:var(--warn)} .logo.half .b3{fill:transparent;stroke:var(--warn)}
+.logo.down rect{fill:var(--bad)} .logo.down .b3{fill:transparent;stroke:var(--bad);animation:none}
 @keyframes almost{0%,100%{fill:transparent}50%{fill:rgba(255,255,255,.55)}}
 .navlink{font:13px var(--mono);color:var(--muted);text-decoration:none;transition:color .2s}
 .navlink:hover{color:var(--fg)}
@@ -55,7 +57,7 @@ h1{font-weight:500;font-size:clamp(40px,7vw,78px);line-height:1.03;letter-spacin
 h1 .line{display:block;overflow:hidden;padding-bottom:.08em}
 h1 .line>span{display:inline-block}
 h1 .answer{color:var(--muted);transition:color .4s}
-h1 .answer.funcionando{color:var(--ok)} h1 .answer.parcial{color:var(--warn)} h1 .answer.caida{color:var(--fg)}
+h1 .answer.funcionando{color:var(--ok)} h1 .answer.parcial{color:var(--warn)} h1 .answer.caida{color:var(--bad)}
 .caret{display:inline-block;width:.42em;height:.78em;background:var(--green);margin-left:.08em;vertical-align:-.04em}
 .js .caret{animation:caret 1.1s steps(1) infinite}
 @keyframes caret{50%{opacity:0}}
@@ -81,7 +83,7 @@ h1 .answer.funcionando{color:var(--ok)} h1 .answer.parcial{color:var(--warn)} h1
 :focus-visible{outline:2px solid var(--green);outline-offset:3px}
 
 /* minute strip: the last 60 minutes, one tick per minute */
-.minutes{margin-top:44px}
+.minutes{margin-top:0}
 .ticks{display:grid;grid-template-columns:repeat(60,minmax(0,1fr));gap:2px;height:22px;align-items:end}
 .ticks i{display:block;height:35%;background:var(--line-2)}
 .ticks i.funcionando{background:var(--ok);height:100%}

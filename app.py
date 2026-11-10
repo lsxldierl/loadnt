@@ -408,7 +408,7 @@ class BrowserChecker:
             self.contexts[key] = ctx
         return ctx
 
-    def run(self, url, want_click, key=None):
+    def run(self, url, want_click, key=None, on_shot=None):
         self.ensure()
         ctx = self.context_for(key or url)
         page = ctx.new_page()
@@ -445,8 +445,19 @@ class BrowserChecker:
                 out["ms"] = int((time.time() - t0) * 1000)
                 out["err"] = err_kind(e)
                 steps["server"] = step("server", "fail", describe_error(e))
+                if doc_status and doc_status[-1] < 400:      # it started answering but never finished: show what's there
+                    try:
+                        out["jpg"] = page.screenshot(type="jpeg", quality=68, timeout=5000)
+                    except Exception:
+                        pass
                 return out
             out["ms"] = int((time.time() - t0) * 1000)
+            if on_shot:                                       # publish a first image right away
+                try:
+                    page.wait_for_timeout(1200)
+                    on_shot(page.screenshot(type="jpeg", quality=60, timeout=5000))
+                except Exception:
+                    pass
             code = resp.status if resp else 0
             if code and not (200 <= code < 400):
                 steps["server"] = step("server", "fail", http_error(code))
@@ -457,12 +468,12 @@ class BrowserChecker:
             else:
                 steps["server"] = step("server", "ok", f"Respondió en {secs_txt(out['ms'])}")
 
-            for st, ms in (("load", 15000), ("networkidle", 8000)):
+            for st, ms in (("load", 10000), ("networkidle", 5000)):
                 try:
                     page.wait_for_load_state(st, timeout=ms)
                 except Exception:
                     pass
-            page.wait_for_timeout(800)
+            page.wait_for_timeout(600)
             info = page.evaluate(INSPECT_JS)
             try:
                 out["jpg"] = page.screenshot(type="jpeg", quality=68)
@@ -827,7 +838,10 @@ def check_watch(w, checker):
             w["cert"], w["cert_t"] = c, time.time()
     want_click = (prev_status != "funcionando" or not prev_click or time.time() - prev_click["t"] > CLICK_EVERY)
     try:
-        out = checker.run(url, want_click, w["id"]) if checker else basic_run(url)
+        def on_shot(jpg):
+            with lock:
+                w["capture"], w["capture_t"], w["capture_live"] = jpg, time.time(), True
+        out = checker.run(url, want_click, w["id"], on_shot) if checker else basic_run(url)
     except Exception as e:
         if checker:
             checker.reset()
@@ -919,7 +933,7 @@ def worker(n):
                     w["summary"] = "En pausa porque nadie la ha visto en un rato. Abre esta página para reanudar."
             due = [w for w in watches.values() if w["active"] and not w["busy"] and w["next_check_at"] <= now]
             if due:
-                pick = min(due, key=lambda w: w["next_check_at"])
+                pick = min(due, key=lambda w: (w["attempts"] > 0, w["next_check_at"]))   # brand-new links first
                 pick["busy"] = True
         if pick:
             check_watch(pick, checker)

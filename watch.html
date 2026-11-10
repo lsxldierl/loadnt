@@ -15,10 +15,14 @@
 /* Live grid: status + diagnosis + numbers + timeline on the left, live screenshot + tests on the right.
    Phone order: status, screenshot, numbers, timeline, tests. */
 .live{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  grid-template-areas:"status shot" "stats shot" "time checks";border-bottom:1px solid var(--line)}
+  grid-template-areas:"status shot" "stats stats" "time checks";border-bottom:1px solid var(--line)}
+.c-status{display:flex;flex-direction:column}
+.c-status .bottom{margin-top:auto;padding-top:var(--g)}
+.st-big.funcionando{color:var(--ok)} .st-big.parcial{color:var(--warn)} .st-big.caida{color:var(--bad)}
 .cell{padding:var(--g) var(--g) var(--g) 0;min-width:0}
 .c-shot,.c-checks{padding:var(--g) 0 var(--g) var(--g);border-left:1px solid var(--line)}
 .c-stats,.c-time,.c-checks{border-top:1px solid var(--line)}
+.c-stats{padding-right:0}
 .c-status{grid-area:status}.c-shot{grid-area:shot}.c-stats{grid-area:stats}.c-time{grid-area:time}.c-checks{grid-area:checks}
 
 .head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px}
@@ -32,7 +36,7 @@
 .note.good{border-left-color:var(--ok)} .note.info{border-left-color:var(--line-2)}
 .note b{display:block;font-weight:500;font-size:15px}
 .note p{margin:3px 0 0;font-size:14px;color:var(--muted);max-width:52ch}
-.next{display:flex;align-items:center;gap:12px;margin-top:22px;font:12px var(--mono);color:var(--muted)}
+.next{display:flex;align-items:center;gap:12px;margin-top:18px;font:12px var(--mono);color:var(--muted)}
 .bar{flex:1;height:1px;background:var(--line-2);position:relative;overflow:hidden;max-width:220px}
 .bar i{position:absolute;inset:0 auto 0 0;background:var(--green);width:0;transition:width 1s linear}
 .flash{position:relative}
@@ -44,9 +48,9 @@
 .b-bar{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line-2);font:12px var(--mono)}
 .b-url{flex:1;min-width:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .b-url::before{content:"› ";color:var(--green)}
-.b-tag{font:500 11px var(--mono);padding:2px 7px;border-radius:2px;white-space:nowrap;color:var(--muted);background:var(--raise-2)}
+.b-tag{display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--mono);padding:5px 8px;border-radius:2px;white-space:nowrap;color:var(--muted);background:var(--raise-2)}
 .b-tag.live{background:var(--ok-soft);color:var(--ok)}
-.b-tag.live::before{content:"";display:inline-block;width:6px;height:6px;background:var(--ok);margin-right:6px;vertical-align:1px;animation:blink 1.6s ease-in-out infinite}
+.b-tag.live::before{content:"";display:block;flex:none;width:6px;height:6px;border-radius:50%;background:var(--ok);animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
 .shot{position:relative;aspect-ratio:1280/860;max-width:100%;background:#000}
 .shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:top;transition:opacity .5s}
@@ -57,11 +61,10 @@
 @keyframes scan{to{top:100%}}
 .b-cap{margin:12px 0 0;font-size:13.5px;color:var(--muted)}
 
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.stat{padding:20px var(--g) 20px 0;min-width:0}
-.stat:nth-child(even){padding:20px 0 20px var(--g);border-left:1px solid var(--line)}
-.stat:nth-child(n+3){border-top:1px solid var(--line)}
-.c-stats{padding-top:calc(var(--g) / 2);padding-bottom:calc(var(--g) / 2)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.stat{padding:4px var(--g);min-width:0;border-left:1px solid var(--line)}
+.stat:first-child{padding-left:0;border-left:0}
+.stat:last-child{padding-right:0}
 .stat .value{font:500 26px/1.15 var(--mono);letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .stat .note2{font-size:13px;color:var(--dim);margin-top:4px}
 .meter{height:2px;background:var(--line-2);margin-top:12px;overflow:hidden}
@@ -84,7 +87,9 @@ details summary .tag,.head .tag{white-space:nowrap}
 .chev{color:var(--dim);transition:transform .25s var(--ease)}
 details[open] .chev{transform:rotate(180deg)}
 .checks{list-style:none;margin:16px 0 0;padding:0}
-.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.checks .ck-l,.checks .ck-d{display:inline}
+.checks .ck-d::before{content:" · "}
 .ic{width:18px;height:18px;display:grid;place-items:center;font:600 11px/1 var(--mono);color:var(--dim);margin-top:2px}
 .ic.ok{background:var(--ok-soft);color:var(--ok)} .ic.warn{background:var(--warn-soft);color:var(--warn)} .ic.fail{background:var(--bad-soft);color:var(--bad)}
 .ck-l{font-weight:500;font-size:15px}
@@ -96,13 +101,29 @@ details[open] .chev{transform:rotate(180deg)}
 .offline{margin:16px 0 0;font:13px var(--mono);color:var(--bad)}
 
 @media (max-width:900px){
-  .live{grid-template-columns:minmax(0,1fr);grid-template-areas:"status" "shot" "stats" "time" "checks"}
+  .live{grid-template-columns:minmax(0,1fr);grid-template-areas:"shot" "status" "stats" "time" "checks"}
   .cell,.c-shot,.c-checks{padding:var(--g) 0;border-left:0}
-  .c-shot{border-top:1px solid var(--line)}
+  .c-status{border-top:1px solid var(--line)}
+  .c-shot{padding-top:24px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat{padding:18px var(--g) 18px 0;border-left:0}
+  .stat:nth-child(even){padding:18px 0 18px var(--g);border-left:1px solid var(--line)}
+  .stat:nth-child(n+3){border-top:1px solid var(--line)}
+  .stat:first-child{padding-left:0}
+  .c-stats{padding-block:calc(var(--g) / 2)}
+}
+@media (max-width:600px){
+  .hero{padding-block:28px 24px}
+  .hero .eyebrow{margin-bottom:12px}
+  .hero .sub{display:none}
+  .hero-row{margin-top:20px}
+  .hero .actions{display:flex;flex-wrap:nowrap;align-items:center;gap:18px;width:100%}
+  .hero .actions .btn{flex:1;width:auto}
+  h1{font-size:36px}
 }
 @media (max-width:420px){
   .sum-r{font-size:12px}
-  .stat{padding:18px 16px 18px 0} .stat:nth-child(even){padding:18px 0 18px 16px}
+  .stat{padding:16px 16px 16px 0} .stat:nth-child(even){padding:16px 0 16px 16px}
   .stat .value{font-size:21px}
 }
 @media (prefers-reduced-motion:reduce){.checking .scan,.b-tag.live::before,.flash.go::after{animation:none}}
@@ -127,13 +148,9 @@ details[open] .chev{transform:rotate(180deg)}
     <div class="hero-row">
       <p class="sub" id="sub">La revisamos cada 30 segundos y te avisamos al celular apenas cargue.</p>
       <div class="actions">
-        <a class="btn" href="#avisos">Avísame cuando cargue <span class="arr">→</span></a>
+        <a class="btn" href="#avisos">Avísame <span class="arr">→</span></a>
         <a class="tlink" id="openBtn" href="#" target="_blank" rel="noopener">abrir página ↗</a>
       </div>
-    </div>
-    <div class="minutes" aria-label="Resultado de cada minuto, la última hora">
-      <div class="ticks" id="ticks"></div>
-      <div class="ticks-legend"><span>hace 60 min</span><span id="ticksSum"></span><span>ahora</span></div>
     </div>
     <p class="offline" id="offline" hidden>Sin conexión con {{SITE_NAME}}. Reintentando…</p>
   </div>
@@ -148,7 +165,13 @@ details[open] .chev{transform:rotate(180deg)}
         <p class="summary" id="summary">Haciendo la primera revisión…</p>
         <div class="probe"><span class="tag">desde tu conexión</span><span class="v dim" id="probeText">probando…</span></div>
         <div class="notes" id="notes"></div>
-        <div class="next"><span id="nextText">próxima revisión en —</span><div class="bar"><i id="bar"></i></div></div>
+        <div class="bottom">
+          <div class="minutes" aria-label="Resultado de cada minuto, la última hora">
+            <div class="ticks" id="ticks"></div>
+            <div class="ticks-legend"><span>hace 60 min</span><span id="ticksSum"></span><span>ahora</span></div>
+          </div>
+          <div class="next"><span id="nextText">próxima revisión en —</span><div class="bar"><i id="bar"></i></div></div>
+        </div>
       </div>
 
       <div class="cell c-shot">
@@ -384,7 +407,8 @@ function render(){
   $("answer").className = "answer " + (paused ? "" : st);
   FX.decode($("statusText"), paused ? "En pausa" : T.big);
   if (changed){ const c = $("statusCell"); c.classList.remove("go"); void c.offsetWidth; c.classList.add("go"); }
-  $("logo").setAttribute("class", "logo " + (st === "funcionando" ? "live" : "seek"));
+  $("logo").setAttribute("class", "logo " + ({funcionando:"live", parcial:"half", caida:"down"}[st] || "seek"));
+  $("statusText").className = "st-big " + (paused ? "" : st);
   $("sub").textContent = st === "funcionando"
     ? "Está funcionando. Entra y termina lo que tengas que hacer antes de que se vuelva a caer."
     : "La revisamos cada 30 segundos y te avisamos al celular apenas cargue.";
