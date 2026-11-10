@@ -129,13 +129,13 @@ def proxy_settings():
 
 
 STEP_LABELS = [
-    ("server", "El sitio contesta"),
+    ("server", "El sitio responde"),
     ("content", "Hay contenido"),
     ("assets", "Carga completa"),
     ("render", "Se ve en pantalla"),
-    ("buttons", "Hay botones para presionar"),
-    ("click", "Los botones responden"),
-    ("mobile", "Se ve en celular"),
+    ("buttons", "Los botones están activos"),
+    ("click", "Los botones funcionan"),
+    ("mobile", "Carga en celular"),
 ]
 
 
@@ -192,7 +192,7 @@ def clean_url(raw):
     if ok is None:
         raise ValueError("No encontramos ese sitio. Revisa que el enlace esté bien escrito.")
     if not ok:
-        raise ValueError("Ese enlace apunta a una red privada o local, y no se puede vigilar desde aquí.")
+        raise ValueError("Ese enlace apunta a una red privada o local, así que no lo podemos revisar.")
     netloc = p.hostname.lower() + (f":{p.port}" if p.port else "")
     if is_ip and ":" in p.hostname:
         netloc = f"[{p.hostname}]" + (f":{p.port}" if p.port else "")
@@ -214,7 +214,7 @@ def new_watch(url, wid=None, created=None, last_view=None, preset=False):
         "created": created or now, "last_view": last_view or now, "active": True, "busy": False,
         "status": "comprobando", "status_since": now,
         "summary": "Haciendo la primera revisión…",
-        "steps": [step(k, "pending", "Todavía no se revisa") for k, _ in STEP_LABELS],
+        "steps": [step(k, "pending", "Pendiente") for k, _ in STEP_LABELS],
         "click": None, "mobile": None, "notes": [], "last_ms": None, "attempts": 0,
         "last_up_at": None, "up_window": None,      # {start, end} of the last time it worked
         "capture": None, "capture_t": None, "capture_live": False,
@@ -278,22 +278,22 @@ def describe_error(e):
     s = str(e)
     reason = getattr(e, "reason", None)
     if "ERR_NAME_NOT_RESOLVED" in s or isinstance(reason, socket.gaierror):
-        return "No se encontró el sitio en internet"
+        return "No se encontró el sitio"
     if "ERR_CONNECTION_RESET" in s or isinstance(reason, ConnectionResetError) or isinstance(e, ConnectionResetError):
         return "El sitio cortó la conexión"
     if "ERR_CONNECTION_REFUSED" in s or isinstance(reason, ConnectionRefusedError):
-        return "El sitio no aceptó la visita"
+        return "El sitio rechazó la conexión"
     if "ERR_EMPTY_RESPONSE" in s:
-        return "El sitio contestó, pero vacío"
+        return "El sitio respondió vacío"
     if "ERR_BLOCKED" in s or "blocked" in s.lower():
-        return "La página intentó llevarnos a una dirección privada"
+        return "La página redirige a una dirección privada"
     if "Timeout" in s or "TIMED_OUT" in s or isinstance(e, (socket.timeout, TimeoutError)) \
             or isinstance(reason, (socket.timeout, TimeoutError)):
-        return f"No contestó (esperamos {TIMEOUT} segundos)"
+        return f"No respondió en {TIMEOUT} segundos"
     if isinstance(e, urllib.error.HTTPError):
         return http_error(e.code)
     if "SSL" in s or "CERT" in s:
-        return "El sitio tiene un problema de seguridad (certificado)"
+        return "Problema con el certificado de seguridad"
     return "No se pudo abrir el sitio"
 
 
@@ -301,12 +301,12 @@ def http_error(code):
     if code == 404:
         return "La página no existe (error 404)"
     if code in (401, 403):
-        return f"El sitio no deja entrar (error {code})"
+        return f"Acceso denegado (error {code})"
     if code == 429:
-        return "El sitio está recibiendo demasiadas visitas (error 429)"
+        return "Demasiadas visitas a la vez (error 429)"
     if code >= 500:
         return f"El sitio está caído o saturado (error {code})"
-    return f"El sitio dio un error (código {code})"
+    return f"Error del sitio (código {code})"
 
 
 # ------------------------------------------------------------------ browser check
@@ -442,7 +442,7 @@ class BrowserChecker:
                 elif code == 429:
                     out["notes"].append("busy")
             else:
-                steps["server"] = step("server", "ok", f"Contestó en {secs_txt(out['ms'])}")
+                steps["server"] = step("server", "ok", f"Respondió en {secs_txt(out['ms'])}")
 
             for st, ms in (("load", 15000), ("networkidle", 8000)):
                 try:
@@ -477,7 +477,7 @@ class BrowserChecker:
                 steps["content"] = step("content", "fail", "Dice que no está disponible desde este país")
             elif short and any(p in low for p in DENIED_PHRASES):
                 out["notes"].append("blocked")
-                steps["content"] = step("content", "fail", "Dice que no tenemos permiso para entrar")
+                steps["content"] = step("content", "fail", "Dice «acceso denegado»")
             elif short and any(p in low for p in MAINT_PHRASES):
                 out["notes"].append("maintenance")
                 steps["content"] = step("content", "fail", "Dice que está en mantenimiento")
@@ -510,24 +510,24 @@ class BrowserChecker:
             if not btns:
                 steps["buttons"] = step("buttons", "warn", "No encontramos botones en esta página")
             elif not enabled:
-                steps["buttons"] = step("buttons", "fail", "Los botones aparecen, pero no se pueden presionar")
+                steps["buttons"] = step("buttons", "fail", "Los botones aparecen desactivados")
             else:
                 names = [n for n in dict.fromkeys(b["text"] for b in enabled) if n][:3]
-                steps["buttons"] = step("buttons", "ok", "Se pueden presionar" + (": " + ", ".join(f"«{n}»" for n in names) if names else ""))
+                steps["buttons"] = step("buttons", "ok", "Activos" + (": " + ", ".join(f"«{n}»" for n in names) if names else ""))
 
             out["pass"] = not any(steps[k]["state"] == "fail" for k in ("content", "assets", "render", "buttons"))
             if not out["pass"] or not want_click:
                 return out
             target = page.evaluate(PICK_BUTTON_JS)
             if not target:
-                out["click"] = {"ok": None, "t": time.time(), "detail": "No hay un botón «Siguiente» o «Comenzar» para probar sin riesgo"}
+                out["click"] = {"ok": None, "t": time.time(), "detail": "No hay un botón «Siguiente» o «Comenzar» que se pueda probar sin riesgo"}
                 return out
             before = page.evaluate(SNAP_JS)
             n_docs = len(doc_status)
             try:
                 page.click("[data-loadnt]", timeout=10000)
             except Exception:
-                out["click"] = {"ok": False, "t": time.time(), "detail": f"No se pudo presionar «{target}»"}
+                out["click"] = {"ok": False, "t": time.time(), "detail": f"No se pudo hacer clic en «{target}»"}
                 return out
             for st, ms in (("load", 15000), ("networkidle", 6000)):
                 try:
@@ -538,17 +538,17 @@ class BrowserChecker:
             after = page.evaluate(SNAP_JS)
             new_docs = doc_status[n_docs:]
             if new_docs and new_docs[-1] >= 400:
-                out["click"] = {"ok": False, "t": time.time(), "detail": f"Presionamos «{target}» y salió un error"}
+                out["click"] = {"ok": False, "t": time.time(), "detail": f"Probamos «{target}» y salió un error"}
             elif after == before:
-                out["click"] = {"ok": False, "t": time.time(), "detail": f"Presionamos «{target}» y no pasó nada"}
+                out["click"] = {"ok": False, "t": time.time(), "detail": f"Probamos «{target}» y no pasó nada"}
             else:
                 info2 = page.evaluate(INSPECT_JS)
                 if info2["textLen"] < 50 and not info2["hasForm"]:
-                    out["click"] = {"ok": False, "t": time.time(), "detail": f"Presionamos «{target}» y quedó en blanco"}
+                    out["click"] = {"ok": False, "t": time.time(), "detail": f"Probamos «{target}» y quedó en blanco"}
                 elif info2["textLen"] < 600 and any(p in info2["text"].lower() for p in ERROR_PHRASES):
-                    out["click"] = {"ok": False, "t": time.time(), "detail": f"Presionamos «{target}» y salió un error"}
+                    out["click"] = {"ok": False, "t": time.time(), "detail": f"Probamos «{target}» y salió un error"}
                 else:
-                    out["click"] = {"ok": True, "t": time.time(), "detail": f"Presionamos «{target}» y avanzó"}
+                    out["click"] = {"ok": True, "t": time.time(), "detail": f"Probamos «{target}» y avanzó"}
             return out
         finally:
             try:
@@ -569,9 +569,9 @@ def _mobile_check(self, url):
         try:
             resp = page.goto(url, timeout=TIMEOUT * 1000, wait_until="domcontentloaded")
         except Exception as e:
-            return {"ok": False, "t": time.time(), "detail": "En celular: " + describe_error(e).lower()}
+            return {"ok": False, "t": time.time(), "detail": "En celular: " + describe_error(e)[0].lower() + describe_error(e)[1:]}
         if resp and resp.status >= 400:
-            return {"ok": False, "t": time.time(), "detail": "En celular da " + http_error(resp.status).lower()}
+            return {"ok": False, "t": time.time(), "detail": "En celular: " + http_error(resp.status)[0].lower() + http_error(resp.status)[1:]}
         for st, ms in (("load", 15000), ("networkidle", 6000)):
             try:
                 page.wait_for_load_state(st, timeout=ms)
@@ -583,7 +583,7 @@ def _mobile_check(self, url):
         if info["chars"] < 60 and info["visible"] < 6 and info["imgs"] == 0:
             return {"ok": False, "t": time.time(), "detail": "En celular no se ve nada en pantalla"}
         wide = page.evaluate("() => document.documentElement.scrollWidth > innerWidth + 40")
-        return {"ok": True, "t": time.time(), "detail": "Se ve en pantalla de celular" + (" (hay que mover de lado a lado)" if wide else "")}
+        return {"ok": True, "t": time.time(), "detail": "Se ve bien en celular" + (" (hay que desplazarse de lado)" if wide else "")}
     finally:
         try:
             ctx.close()
@@ -616,7 +616,7 @@ def basic_run(url, want_click=False):
         return out
     out["ms"] = int((time.time() - t0) * 1000)
     out["pass"] = True
-    steps["server"] = step("server", "ok", f"Contestó en {secs_txt(out['ms'])}")
+    steps["server"] = step("server", "ok", f"Respondió en {secs_txt(out['ms'])}")
     t = re.sub(r"(?is)<(script|style|noscript)[^>]*>.*?</\1>", " ", body)
     t = re.sub(r"\s+", " ", html.unescape(re.sub(r"(?s)<[^>]+>", " ", t))).strip()
     if len(t) < MIN_TEXT and "<form" not in body.lower():
@@ -629,11 +629,11 @@ def basic_run(url, want_click=False):
 # ------------------------------------------------------------------ verdict, stats, notifications
 
 FAIL_SUMMARY = {
-    "content": {"Muestra un mensaje de error del sitio": "Se abrió, pero muestra un mensaje de error",
-                "La página está en blanco": "Se abrió, pero en blanco"},
-    "assets": "Se abrió a medias: faltan partes de la página",
-    "render": "Se abrió, pero no se ve nada en pantalla",
-    "buttons": "Se abrió, pero los botones no se pueden presionar",
+    "content": {"Muestra un mensaje de error del sitio": "Carga, pero muestra un error",
+                "La página está en blanco": "Carga en blanco"},
+    "assets": "Carga a medias: faltan partes de la página",
+    "render": "Carga, pero no se ve nada",
+    "buttons": "Carga, pero los botones están desactivados",
 }
 
 
@@ -646,15 +646,15 @@ def decide(steps, click, basic):
             m = FAIL_SUMMARY[k]
             if isinstance(m, dict):
                 d = s[k]["detail"]
-                return "parcial", m.get(d, "Se abrió, pero " + d[0].lower() + d[1:])
+                return "parcial", m.get(d, "Carga, pero " + d[0].lower() + d[1:])
             return "parcial", m
     if basic:
-        return "funcionando", "¡Funciona! Se abrió con contenido"
+        return "funcionando", "¡Funciona! Carga con contenido"
     if click and click["ok"] is False:
-        return "parcial", "Se ve bien, pero los botones no responden"
+        return "parcial", "Carga bien, pero los botones no funcionan"
     if click and click["ok"]:
-        return "funcionando", "¡Funciona! Se abrió completa y los botones responden"
-    return "funcionando", "¡Funciona! Se abrió completa"
+        return "funcionando", "¡Funciona! Carga completa y los botones responden"
+    return "funcionando", "¡Funciona! Carga completa"
 
 
 def stats_for(w, now):
@@ -711,7 +711,7 @@ def send_notification(w):
         _post(NTFY_SERVER, {
             "topic": w["topic"],
             "title": f"¡{w['host']} ya cargó!",
-            "message": "Se abrió completa y funciona. Entra ahora, antes de que se caiga otra vez.",
+            "message": "Ya carga completa. Entra ahora, antes de que se vuelva a caer.",
             "click": w["url"], "priority": 5, "tags": ["white_check_mark"],
             "actions": [{"action": "view", "label": "Abrir página", "url": w["url"]}],
         })
@@ -721,48 +721,45 @@ def send_notification(w):
 
 
 NOTE_TEXT = {
-    "geo": ("Puede que no deje entrar desde fuera de {country}",
-            "Este sitio parece ser de {country} y nuestro revisor está en {region}. Muchos sitios, sobre todo de gobierno, "
-            "solo aceptan visitas desde su país o rechazan servidores. Mira «desde tu conexión»: si a ti sí te contesta, "
-            "ábrelo tú directamente."),
-    "blocked": ("El sitio rechaza nuestra visita",
-                "Contestó que no tenemos permiso. Suele pasar cuando un sitio solo acepta visitas desde su país "
-                "o bloquea navegadores automáticos. Desde tu conexión podría funcionar: ábrelo tú."),
-    "geo_text": ("Dice que no está disponible desde este país",
-                 "El propio sitio dice que solo funciona desde ciertos países. Nuestro revisor está en {region}. "
-                 "Si estás en {country_or_pais}, ábrelo tú; si no, necesitarías conectarte desde ese país."),
-    "captcha": ("Pide comprobar que eres humano",
-                "Aparece una verificación tipo «no soy un robot». Nosotros no podemos pasarla, pero tú sí: "
-                "abre la página y complétala."),
-    "cookies": ("El sitio necesita cookies",
-                "Si a ti no te carga, ábrelo en una ventana privada o borra las cookies de este sitio y vuelve a intentar. "
-                "Revisa también que tu navegador no esté bloqueando cookies."),
-    "session": ("Dice que la sesión caducó",
-                "Al abrirlo, empieza de nuevo desde el inicio. Si te pasa a mitad del formulario, borra las cookies de "
-                "este sitio o usa una ventana privada."),
-    "maintenance": ("Está en mantenimiento",
-                    "El propio sitio dice que está en mantenimiento. Normalmente vuelve solo: te avisamos cuando pase."),
-    "busy": ("Hay demasiada gente entrando",
-             "El sitio está saturado de visitas. Suele mejorar de noche o muy temprano en la mañana."),
+    "geo": ("Puede que solo acepte visitas desde {country}",
+            "Este sitio parece ser de {country} y nuestro servidor está en {region}. Muchos sitios, sobre todo de gobierno, "
+            "solo aceptan visitas desde su propio país. Mira «desde tu conexión»: si a ti sí te responde, ábrela directamente."),
+    "blocked": ("El sitio nos bloquea",
+                "Respondió con «acceso denegado». Pasa cuando un sitio solo acepta visitas de su país o bloquea navegadores "
+                "automáticos. Desde tu conexión podría funcionar."),
+    "geo_text": ("No está disponible desde este país",
+                 "El sitio dice que solo funciona desde ciertos países, y nuestro servidor está en {region}. "
+                 "Si estás en {country_or_pais}, ábrela tú; si no, tendrías que conectarte desde allá."),
+    "captcha": ("Pide verificar que no eres un robot",
+                "Hay un captcha que nosotros no podemos resolver, pero tú sí: abre la página y complétalo."),
+    "cookies": ("Necesita cookies",
+                "Si no te carga, ábrela en una ventana de incógnito o borra las cookies de este sitio. "
+                "Revisa también que tu navegador no esté bloqueando las cookies."),
+    "session": ("La sesión caducó",
+                "Al entrar, empieza desde el inicio. Si te pasa a mitad del formulario, borra las cookies del sitio "
+                "o usa una ventana de incógnito."),
+    "maintenance": ("En mantenimiento",
+                    "El sitio dice que está en mantenimiento. Normalmente vuelve solo; te avisamos cuando pase."),
+    "busy": ("Demasiada gente entrando",
+             "El sitio está saturado. Suele mejorar de noche o temprano en la mañana."),
     "slow": ("Es muy lento",
-             "Cuando contesta, tarda unos {secs} segundos. Espera sin recargar la página: recargar vuelve a empezar la espera."),
-    "redirect": ("Te manda a otra dirección",
-                 "Al abrirla, termina en {host}. Revisa que sea el sitio correcto antes de escribir tus datos."),
+             "Cuando responde, tarda unos {secs} segundos. Espera sin recargar: si recargas, empiezas a esperar de nuevo."),
+    "redirect": ("Te lleva a otra dirección",
+                 "Termina en {host}. Revisa que sea el sitio correcto antes de escribir tus datos."),
     "cert_expired": ("Tu navegador dirá «La conexión no es privada»",
-                     "El certificado de seguridad del sitio está vencido. Cuando funcione, tu navegador mostrará esa advertencia: "
-                     "toca «Configuración avanzada» y luego «Continuar al sitio». Hazlo solo si la dirección es exactamente {host_self}."),
+                     "El certificado de seguridad del sitio está vencido. Cuando cargue, toca «Configuración avanzada» y "
+                     "luego «Acceder a {host_self}». Hazlo solo si la dirección es exactamente esa."),
     "cert_invalid": ("Tu navegador dirá «La conexión no es privada»",
-                     "El certificado de seguridad del sitio no es válido. Para entrar: «Configuración avanzada» y «Continuar al sitio», "
-                     "solo si la dirección es exactamente {host_self}. No escribas contraseñas ni datos bancarios ahí."),
+                     "El certificado de seguridad del sitio no es válido. Para entrar: «Configuración avanzada» y luego "
+                     "«Acceder a {host_self}», solo si la dirección es exactamente esa. No escribas contraseñas ni datos bancarios."),
     "partial_assets": ("Recarga varias veces",
-                       "La página llega, pero varias de sus partes (diseño, botones) se cortan en el camino. Tu navegador guarda "
-                       "lo que ya bajó, así que cada recarga completa un poco más. Si se ve sin diseño o los botones no hacen nada, "
-                       "recarga hasta que se vea bien."),
-    "flaky": ("El sitio corta muchas conexiones",
-              "A veces contesta y a veces corta la conexión. Recargar varias veces sí sirve aquí: en la última hora pasó en "
-              "{flaky_ok} de {flaky_total} intentos."),
+                       "La página llega, pero algunas partes (el diseño, los botones) se cortan en el camino. Tu navegador "
+                       "guarda lo que ya descargó, así que cada recarga completa un poco más. Recarga hasta que se vea bien."),
+    "flaky": ("Corta muchas conexiones",
+              "A veces responde y a veces corta. Aquí sí sirve recargar: en la última hora cargó {flaky_ok} de "
+              "{flaky_total} veces."),
     "mobile": ("En celular no funciona igual",
-               "{detail}. Si puedes, ábrelo desde una computadora."),
+               "{detail}. Si puedes, ábrela desde una computadora."),
 }
 
 
@@ -906,7 +903,7 @@ def worker(n):
             for w in watches.values():
                 if w["active"] and now - w["last_view"] > WATCH_HOURS * 3600 and not w["preset"]:
                     w["active"] = False
-                    w["summary"] = "En pausa: nadie abrió esta página por un buen tiempo. Ábrela para reanudar."
+                    w["summary"] = "En pausa porque nadie la ha visto en un rato. Abre esta página para reanudar."
             due = [w for w in watches.values() if w["active"] and not w["busy"] and w["next_check_at"] <= now]
             if due:
                 pick = min(due, key=lambda w: w["next_check_at"])
@@ -969,7 +966,7 @@ class Handler(BaseHTTPRequestHandler):
             with lock:
                 w = watches.get(m.group(1))
                 if not w:
-                    return self._json(404, {"error": "No encontramos esa página vigilada."})
+                    return self._json(404, {"error": "No encontramos esa página."})
                 touch(w)
                 now = time.time()
                 v = public_view(w, now)
@@ -1022,10 +1019,10 @@ class Handler(BaseHTTPRequestHandler):
                 w = watches[by_url[url]]
                 touch(w)
                 if not w["active"]:
-                    return self._json(429, {"error": "Ahora mismo estamos vigilando demasiadas páginas. Intenta en un rato."})
+                    return self._json(429, {"error": "Ahora mismo estamos revisando demasiadas páginas. Intenta de nuevo en un rato."})
                 return self._json(200, {"id": w["id"]})
             if active_count() >= MAX_WATCHES:
-                return self._json(429, {"error": "Ahora mismo estamos vigilando demasiadas páginas. Intenta en un rato."})
+                return self._json(429, {"error": "Ahora mismo estamos revisando demasiadas páginas. Intenta de nuevo en un rato."})
             w = new_watch(url)
         save()
         print(f"Nuevo enlace vigilado: {url} -> /v/{w['id']}", flush=True)

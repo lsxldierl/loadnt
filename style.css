@@ -10,6 +10,7 @@
   --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"Geist Mono","JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
   --ease:cubic-bezier(.2,.7,.2,1);
+  --g:32px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -87,10 +88,12 @@ h1 .answer.funcionando{color:var(--ok)} h1 .answer.parcial{color:var(--warn)} h1
 .ticks i.parcial{background:var(--warn);height:70%}
 .ticks i.caida{background:var(--bad);opacity:.6;height:50%}
 .ticks i.last{outline:1px solid var(--fg);outline-offset:1px}
-.ticks-legend{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim);margin-top:8px}
+.ticks-legend{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;font:11px var(--mono);color:var(--dim);margin-top:8px}
+.ticks-legend span:nth-child(2){text-align:center}
+.ticks-legend span:last-child{text-align:right}
 
 /* sections */
-.sec{padding-block:72px}
+.sec{padding-block:calc(var(--g) * 2.25)}
 .sec+.sec{border-top:1px solid var(--line)}
 .sec-title{font-weight:500;font-size:clamp(28px,4vw,46px);line-height:1.08;letter-spacing:-.03em;margin:0 0 12px;text-wrap:balance}
 .sec-sub{color:var(--muted);margin:0 0 40px;max-width:58ch;font-size:16px}
@@ -100,7 +103,7 @@ h1 .answer.funcionando{color:var(--ok)} h1 .answer.parcial{color:var(--warn)} h1
 .tag.green{color:var(--green)}
 
 .cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.cols>*{padding:4px 32px;border-left:1px solid var(--line);min-width:0;display:flex;flex-direction:column;gap:12px}
+.cols>*{padding:0 var(--g);border-left:1px solid var(--line);min-width:0;display:flex;flex-direction:column;gap:12px}
 .cols>*:first-child{border-left:0;padding-left:0}
 .cols>*:last-child{padding-right:0}
 .cols h3{font-weight:500;font-size:22px;line-height:1.15;letter-spacing:-.02em;margin:4px 0 0}
@@ -130,14 +133,15 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-betw
 
 @media (max-width:860px){
   .cols{grid-template-columns:1fr}
-  .cols>*{border-left:0;padding:24px 0;border-top:1px solid var(--line)}
+  .cols>*{border-left:0;padding:var(--g) 0;border-top:1px solid var(--line)}
   .cols>*:first-child{border-top:0;padding-top:0}
   .hero{padding-block:52px 32px}
   .sec{padding-block:52px}
   .ticks{gap:1px}
 }
 @media (max-width:480px){
-  .actions .btn{flex:1}
+  .actions{width:100%;display:grid;grid-template-columns:1fr;gap:14px;justify-items:center}
+  .actions .btn{width:100%}
 }
 @media (prefers-reduced-motion:reduce){
   .spin,.logo.seek .b3,.js .caret,.js .ticker .row{animation:none}

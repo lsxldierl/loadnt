@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<meta name="description" content="Estado en vivo de una página que no carga, con captura de pantalla, diagnóstico y aviso al celular cuando funcione.">
+<meta name="description" content="Estado en vivo de una página que no carga, con captura de pantalla y aviso al celular cuando cargue.">
 <title>{{SITE_NAME}}</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Crect x='3' y='11' width='7' height='10' fill='%23fff'/%3E%3Crect x='12.5' y='11' width='7' height='10' fill='%23fff'/%3E%3Crect x='22.75' y='11.75' width='5.5' height='8.5' fill='none' stroke='%233ecf8e' stroke-width='1.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,15 +14,15 @@
 <style>
 /* Live grid: status + diagnosis + numbers + timeline on the left, live screenshot + tests on the right.
    Phone order: status, screenshot, numbers, timeline, tests. */
-.live{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);
+.live{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   grid-template-areas:"status shot" "stats shot" "time checks";border-bottom:1px solid var(--line)}
-.cell{padding:36px 36px 36px 0;min-width:0}
-.c-shot,.c-checks{padding:36px 0 36px 36px;border-left:1px solid var(--line)}
+.cell{padding:var(--g) var(--g) var(--g) 0;min-width:0}
+.c-shot,.c-checks{padding:var(--g) 0 var(--g) var(--g);border-left:1px solid var(--line)}
 .c-stats,.c-time,.c-checks{border-top:1px solid var(--line)}
 .c-status{grid-area:status}.c-shot{grid-area:shot}.c-stats{grid-area:stats}.c-time{grid-area:time}.c-checks{grid-area:checks}
 
-.st-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.st-big{font-weight:500;font-size:clamp(30px,3.6vw,42px);letter-spacing:-.03em;line-height:1.05;margin:14px 0 10px;min-height:1.05em}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:24px}
+.st-big{font-weight:500;font-size:clamp(30px,3.6vw,42px);letter-spacing:-.03em;line-height:1.05;margin:16px 0 8px;min-height:1.05em}
 .summary{font-size:17px;margin:0;max-width:44ch;overflow-wrap:anywhere}
 .probe{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font:13.5px var(--mono)}
 .probe .v{color:var(--fg)}
@@ -58,10 +58,10 @@
 .b-cap{margin:12px 0 0;font-size:13.5px;color:var(--muted)}
 
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.stat{padding:22px 24px 22px 0;min-width:0}
-.stat:nth-child(even){padding:22px 0 22px 24px;border-left:1px solid var(--line)}
+.stat{padding:20px var(--g) 20px 0;min-width:0}
+.stat:nth-child(even){padding:20px 0 20px var(--g);border-left:1px solid var(--line)}
 .stat:nth-child(n+3){border-top:1px solid var(--line)}
-.c-stats{padding-top:14px;padding-bottom:14px}
+.c-stats{padding-top:calc(var(--g) / 2);padding-bottom:calc(var(--g) / 2)}
 .stat .value{font:500 26px/1.15 var(--mono);letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .stat .note2{font-size:13px;color:var(--dim);margin-top:4px}
 .meter{height:2px;background:var(--line-2);margin-top:12px;overflow:hidden}
@@ -77,9 +77,10 @@
 .tl .t1{font-weight:500;font-size:15px}
 .tl .t2{font:12.5px var(--mono);color:var(--muted)}
 
-details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:24px}
 details summary::-webkit-details-marker{display:none}
-.sum-r{display:flex;align-items:center;gap:10px;font:13px var(--mono)}
+.sum-r{display:flex;align-items:center;gap:10px;font:13px var(--mono);min-width:0;text-align:right}
+details summary .tag,.head .tag{white-space:nowrap}
 .chev{color:var(--dim);transition:transform .25s var(--ease)}
 details[open] .chev{transform:rotate(180deg)}
 .checks{list-style:none;margin:16px 0 0;padding:0}
@@ -96,11 +97,12 @@ details[open] .chev{transform:rotate(180deg)}
 
 @media (max-width:900px){
   .live{grid-template-columns:minmax(0,1fr);grid-template-areas:"status" "shot" "stats" "time" "checks"}
-  .cell,.c-shot,.c-checks{padding:28px 0;border-left:0}
+  .cell,.c-shot,.c-checks{padding:var(--g) 0;border-left:0}
   .c-shot{border-top:1px solid var(--line)}
 }
 @media (max-width:420px){
-  .stat{padding:18px 14px 18px 0} .stat:nth-child(even){padding:18px 0 18px 14px}
+  .sum-r{font-size:12px}
+  .stat{padding:18px 16px 18px 0} .stat:nth-child(even){padding:18px 0 18px 16px}
   .stat .value{font-size:21px}
 }
 @media (prefers-reduced-motion:reduce){.checking .scan,.b-tag.live::before,.flash.go::after{animation:none}}
@@ -113,7 +115,7 @@ details[open] .chev{transform:rotate(180deg)}
       <svg class="logo seek" id="logo" viewBox="0 0 28 14" aria-hidden="true"><rect x="0" y="0" width="7.5" height="14"/><rect x="10.25" y="0" width="7.5" height="14"/><rect class="b3" x="21.25" y=".75" width="6" height="12.5"/></svg>
       {{SITE_NAME}}
     </a>
-    <a class="navlink" href="/">vigilar otra página</a>
+    <a class="navlink" href="/">+ otra página</a>
   </div>
 </nav>
 
@@ -123,7 +125,7 @@ details[open] .chev{transform:rotate(180deg)}
     <p class="eyebrow" id="eyebrow">cargando…</p>
     <h1><span class="line"><span>¿Ya cargó esta página?</span></span><span class="line" style="--l:1"><span class="answer" id="answer">Revisando…</span></span></h1>
     <div class="hero-row">
-      <p class="sub" id="sub">La abrimos con un navegador real cada pocos segundos y te avisamos al celular apenas funcione.</p>
+      <p class="sub" id="sub">La revisamos cada 30 segundos y te avisamos al celular apenas cargue.</p>
       <div class="actions">
         <a class="btn" href="#avisos">Avísame cuando cargue <span class="arr">→</span></a>
         <a class="tlink" id="openBtn" href="#" target="_blank" rel="noopener">abrir página ↗</a>
@@ -133,7 +135,7 @@ details[open] .chev{transform:rotate(180deg)}
       <div class="ticks" id="ticks"></div>
       <div class="ticks-legend"><span>hace 60 min</span><span id="ticksSum"></span><span>ahora</span></div>
     </div>
-    <p class="offline" id="offline" hidden>Se perdió la conexión con {{SITE_NAME}}. Reintentando…</p>
+    <p class="offline" id="offline" hidden>Sin conexión con {{SITE_NAME}}. Reintentando…</p>
   </div>
 </section>
 
@@ -141,7 +143,7 @@ details[open] .chev{transform:rotate(180deg)}
   <div class="wrap">
     <section class="live" aria-label="Estado en vivo">
       <div class="cell c-status flash" id="statusCell">
-        <div class="st-row"><span class="tag">ahora mismo</span><span class="pill comprobando" id="pill"><span class="spin"></span>revisando</span></div>
+        <div class="head"><span class="tag">ahora mismo</span><span class="pill comprobando" id="pill"><span class="spin"></span>revisando</span></div>
         <div class="st-big" id="statusText">Revisando</div>
         <p class="summary" id="summary">Haciendo la primera revisión…</p>
         <div class="probe"><span class="tag">desde tu conexión</span><span class="v dim" id="probeText">probando…</span></div>
@@ -158,7 +160,7 @@ details[open] .chev{transform:rotate(180deg)}
             <div class="scan"></div>
           </div>
         </div>
-        <p class="b-cap" id="bCap">Así se ve la página para cualquier visitante.</p>
+        <p class="b-cap" id="bCap">Así ve la página cualquier visitante.</p>
       </div>
 
       <div class="cell c-stats">
@@ -166,13 +168,13 @@ details[open] .chev{transform:rotate(180deg)}
           <div class="stat"><div class="label" id="sinceLabel">Así desde hace</div><div class="value" id="since">—</div><div class="note2" id="sinceNote"></div></div>
           <div class="stat"><div class="label">Última vez que funcionó</div><div class="value" id="lastUp">—</div><div class="note2" id="lastUpNote"></div></div>
           <div class="stat"><div class="label">Funcionó en la última hora</div><div class="value" id="hour">—</div><div class="meter"><i id="hourBar"></i></div><div class="note2" id="hourNote"></div></div>
-          <div class="stat"><div class="label">Tarda en abrir</div><div class="value" id="speed">—</div><div class="note2" id="speedNote"></div></div>
+          <div class="stat"><div class="label">Tarda en cargar</div><div class="value" id="speed">—</div><div class="note2" id="speedNote"></div></div>
         </div>
       </div>
 
       <div class="cell c-time">
-        <span class="tag">lo que ha pasado</span>
-        <ul class="tl" id="timeline"><li><span class="dot"></span><div><div class="t1">Todavía no hay revisiones</div><div class="t2">la primera tarda hasta un minuto</div></div></li></ul>
+        <div class="head"><span class="tag">historial</span></div>
+        <ul class="tl" id="timeline"><li><span class="dot"></span><div><div class="t1">Todavía no hay revisiones</div><div class="t2">la primera puede tardar un minuto</div></div></li></ul>
       </div>
 
       <details class="cell c-checks" id="checksBox">
@@ -193,22 +195,22 @@ details[open] .chev{transform:rotate(180deg)}
           <ol>
             <li>Instala la app <b>ntfy</b>.
               <div class="links" style="margin-top:8px"><a class="tlink" href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">android ↗</a><a class="tlink" href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iphone ↗</a></div></li>
-            <li>Toca <b>+</b> y escribe este nombre:
+            <li>Toca <b>+</b> y suscríbete a este tema:
               <div class="chip" style="margin-top:8px"><code id="topic">…</code><button class="tlink" id="copyTopic" type="button">copiar</button></div></li>
             <li>Listo. Te llega aunque tengas el celular bloqueado.</li>
           </ol>
-          <div class="links"><a class="tlink dim" id="ntfyWeb" href="#" target="_blank" rel="noopener">en computadora: recibirlo en el navegador ↗</a></div>
+          <div class="links"><a class="tlink dim" id="ntfyWeb" href="#" target="_blank" rel="noopener">¿en computadora? recíbelo en el navegador ↗</a></div>
         </div>
         <div data-reveal>
-          <span class="tag">con esta pestaña abierta</span>
-          <h3>Aquí mismo</h3>
-          <p>Suena una alarma, vibra (en Android) y aparece una notificación en cuanto funcione.</p>
+          <span class="tag">con la pestaña abierta</span>
+          <h3>En esta pestaña</h3>
+          <p>Suena una alarma, vibra (en Android) y aparece una notificación en cuanto cargue.</p>
           <button class="btn" id="alertBtn" type="button" style="align-self:flex-start">Activar alarma</button>
         </div>
         <div data-reveal>
           <span class="tag">para familia y amigos</span>
           <h3>Compártela</h3>
-          <p>Cualquiera con este enlace ve el estado en vivo y puede activar sus propios avisos.</p>
+          <p>Cualquiera con el enlace ve el estado en vivo y puede activar sus propios avisos.</p>
           <div class="chip"><code id="shareUrl">…</code><button class="tlink" id="copyShare" type="button">copiar</button></div>
           <div class="links"><a class="tlink" id="waLink" href="#" target="_blank" rel="noopener">enviar por whatsapp ↗</a></div>
         </div>
@@ -219,7 +221,7 @@ details[open] .chev{transform:rotate(180deg)}
 
 <footer>
   <div class="wrap">
-    <span>{{SITE_NAME}} es una herramienta independiente. No está afiliada a los sitios que vigila.</span>
+    <span>{{SITE_NAME}} es una herramienta independiente. No está afiliada a los sitios que revisa.</span>
     <span>solo botones seguros · nunca enviamos, compramos ni borramos nada</span>
   </div>
 </footer>
@@ -248,10 +250,10 @@ let alertsOn = false, lastStatus = null, audioCtx = null, snap = null, fetchedAt
 let probe = {state: "pending"};
 
 const L = {
-  funcionando: {answer:"Sí. Ábrela ya.", big:"Funciona", pill:"✓ funciona", since:"Funcionando desde hace"},
-  parcial:     {answer:"Abre, pero falla.", big:"Abre a medias", pill:"! a medias", since:"A medias desde hace"},
-  caida:       {answer:"Todavía no.", big:"No carga", pill:"✕ no carga", since:"Sin cargar desde hace"},
-  comprobando: {answer:"Revisando…", big:"Revisando", pill:'<span class="spin"></span>revisando', since:"Vigilando desde hace"}
+  funcionando: {answer:"¡Sí! Entra ya.", big:"Funciona", pill:"✓ funciona", since:"Funcionando desde hace"},
+  parcial:     {answer:"Carga a medias.", big:"Carga a medias", pill:"! a medias", since:"A medias desde hace"},
+  caida:       {answer:"Todavía no.", big:"No carga", pill:"✕ no carga", since:"Caída desde hace"},
+  comprobando: {answer:"Revisando…", big:"Revisando", pill:'<span class="spin"></span>revisando', since:"Revisando desde hace"}
 };
 const ICON = {ok:"✓", warn:"!", fail:"✕", pending:"·", skip:"–"};
 const hm = new Intl.DateTimeFormat(undefined, {hour:"2-digit", minute:"2-digit"});
@@ -292,7 +294,7 @@ function notifyUp(){
   try{ navigator.vibrate && navigator.vibrate([300,120,300,120,700]); }catch(e){}
   try{
     if ("Notification" in window && Notification.permission === "granted"){
-      const n = new Notification(`¡${snap.host} ya cargó!`, {body:"Se abrió completa y funciona. Entra ahora.", tag:"loadnt-" + WID});
+      const n = new Notification(`¡${snap.host} ya cargó!`, {body:"Ya carga completa. Entra ahora.", tag:"loadnt-" + WID});
       n.onclick = () => { window.focus(); window.open(snap.url, "_blank"); };
     }
   }catch(e){}
@@ -334,27 +336,27 @@ function renderDiag(){
   if (!snap) return;
   const st = snap.status, pt = $("probeText");
   if (probe.running && probe.state === "pending") { pt.className = "v dim"; pt.textContent = "probando…"; }
-  else if (probe.state === "ok") { pt.className = "v ok"; pt.textContent = `✓ te contesta (en ${(probe.ms/1000).toFixed(1).replace(".", ",")} s)`; }
-  else if (probe.state === "fail") { pt.className = "v bad"; pt.textContent = probe.timeout ? "✕ no te contesta (esperamos 25 s)" : "✕ no te contesta"; }
-  else if (probe.state === "na") { pt.className = "v dim"; pt.textContent = "no se puede probar desde aquí (el sitio no usa https)"; }
+  else if (probe.state === "ok") { pt.className = "v ok"; pt.textContent = `✓ te responde (${(probe.ms/1000).toFixed(1).replace(".", ",")} s)`; }
+  else if (probe.state === "fail") { pt.className = "v bad"; pt.textContent = probe.timeout ? "✕ no te responde (25 s sin respuesta)" : "✕ no te responde"; }
+  else if (probe.state === "na") { pt.className = "v dim"; pt.textContent = "no se puede probar (el sitio no usa https)"; }
 
   const items = [];
   // What the comparison between our checker and the visitor's connection means
   if (st === "caida" && probe.state === "ok")
-    items.push({cls:"good", title:"A ti sí te contesta",
-      text:`Desde tu conexión el sitio responde, pero desde nuestro revisor (${snap.region}) no. ` +
+    items.push({cls:"good", title:"A ti sí te responde",
+      text:`Desde tu conexión responde, pero desde nuestro servidor (${snap.region}) no. ` +
         (snap.site_country && VISITOR_COUNTRY === snap.site_country
-           ? `Probablemente solo deja entrar desde ${snap.site_country} o bloquea servidores. Ábrelo tú directamente.`
-           : "Puede que bloquee visitas desde otros países o desde servidores. Ábrelo tú directamente.") +
-        " Que conteste no siempre significa que cargue completa."});
+           ? `Seguramente solo acepta visitas desde ${snap.site_country}. Ábrela directamente.`
+           : "Puede que bloquee visitas de otros países o de servidores. Ábrela directamente.") +
+        " Ojo: que responda no siempre significa que cargue completa."});
   else if (st === "funcionando" && probe.state === "fail")
-    items.push({cls:"", title:"Funciona, pero tu conexión no llega",
-      text:"Prueba desactivar la VPN, cambiar de Wi-Fi a datos móviles, o abrirla en otro navegador o en una ventana privada." +
+    items.push({cls:"", title:"Funciona, pero a ti no te carga",
+      text:"Prueba desactivar la VPN, cambiar de Wi-Fi a datos móviles, o abrirla en otro navegador o en una ventana de incógnito." +
         (snap.site_country && VISITOR_COUNTRY && VISITOR_COUNTRY !== snap.site_country
-           ? ` Parece que estás fuera de ${snap.site_country}: puede que el sitio solo deje entrar desde allí.` : "")});
+           ? ` Parece que estás fuera de ${snap.site_country}, y puede que el sitio solo acepte visitas desde allá.` : "")});
   else if (st === "caida" && probe.state === "fail")
-    items.push({cls:"info", title:"Tampoco contesta desde tu conexión",
-      text:"Está caído para todos, no es tu internet. Te avisamos apenas vuelva."});
+    items.push({cls:"info", title:"A ti tampoco te responde",
+      text:"Está caída para todos, no es tu internet. Te avisamos apenas vuelva."});
   // Server-side findings (geo blocks, captcha, cookies, maintenance, redirects, phone, slowness)
   (snap.notes || []).forEach(n => {
     if (n.kind === "geo" && probe.state === "ok" && st === "caida") return; // already explained above
@@ -381,8 +383,8 @@ function render(){
   if (changed){ const c = $("statusCell"); c.classList.remove("go"); void c.offsetWidth; c.classList.add("go"); }
   $("logo").setAttribute("class", "logo " + (st === "funcionando" ? "live" : "seek"));
   $("sub").textContent = st === "funcionando"
-    ? "Funciona ahora mismo. Ábrela y termina lo que necesitas antes de que se vuelva a caer."
-    : "La abrimos con un navegador real cada pocos segundos y te avisamos al celular apenas funcione.";
+    ? "Está funcionando. Entra y termina lo que tengas que hacer antes de que se vuelva a caer."
+    : "La revisamos cada 30 segundos y te avisamos al celular apenas cargue.";
   $("pill").className = "pill " + (paused ? "pausa" : st);
   $("pill").innerHTML = paused ? "en pausa" : T.pill;
   $("summary").textContent = s.summary;
@@ -391,7 +393,7 @@ function render(){
   const mins = s.minutes || [];
   $("ticks").innerHTML = mins.map((m, i) => `<i class="${m || ""}${i === mins.length - 1 ? " last" : ""}" title="hace ${mins.length - 1 - i} min"></i>`).join("");
   const upMin = mins.filter(m => m === "funcionando").length, checked = mins.filter(Boolean).length;
-  $("ticksSum").textContent = checked ? (upMin ? `funcionó en ${upMin} de ${checked} minutos` : "no funcionó en la última hora") : "";
+  $("ticksSum").textContent = checked ? (upMin ? `funcionó ${upMin} de ${checked} minutos` : "no cargó en la última hora") : "";
   FX.ticker($("ticker"), (s.recent || []).slice().reverse().map(r => [r[0], "", r[1], r[2]]));
 
   // screenshot
@@ -401,15 +403,15 @@ function render(){
     $("bTag").textContent = s.capture_live ? "en vivo" : "anterior";
     $("bTag").className = "b-tag" + (s.capture_live ? " live" : "");
     $("bCap").textContent = s.capture_live
-      ? `Así se veía ${ago(now - s.capture_t)}, desde ${s.region}.`
-      : `En la última revisión no cargó. Esta es la última imagen que obtuvimos, de ${ago(now - s.capture_t)}.`;
+      ? `Así se veía ${ago(now - s.capture_t)}, vista desde ${s.region}.`
+      : `No cargó en la última revisión. Esta es la imagen anterior, de ${ago(now - s.capture_t)}.`;
   } else {
     $("bTag").textContent = "sin imagen"; $("bTag").className = "b-tag";
     $("bCap").textContent = s.mode === "navegador" ? "La página todavía no ha mostrado nada." : "Las imágenes necesitan el modo navegador.";
   }
 
   // numbers
-  $("sinceLabel").textContent = st === "comprobando" ? "Vigilando desde hace" : T.since;
+  $("sinceLabel").textContent = T.since;
   $("since").textContent = dur(now - s.status_since);
   $("sinceNote").textContent = "desde las " + at(s.status_since);
   if (st === "funcionando"){ $("lastUp").textContent = "ahora"; $("lastUpNote").textContent = ""; }
@@ -427,8 +429,8 @@ function render(){
   if (S.typical_ms != null){
     const sec = S.typical_ms / 1000;
     $("speed").textContent = sec < 1 ? "<1 s" : "~" + Math.round(sec) + " s";
-    $("speedNote").textContent = sec > 15 ? "ten paciencia al abrirla" : "cuando contesta";
-  } else { $("speed").textContent = "—"; $("speedNote").textContent = "no contestó en la última hora"; }
+    $("speedNote").textContent = sec > 15 ? "ten paciencia al abrirla" : "cuando responde";
+  } else { $("speed").textContent = "—"; $("speedNote").textContent = "no respondió en la última hora"; }
 
   // timeline
   if (s.timeline.length){
@@ -445,7 +447,7 @@ function render(){
   // tests
   const failed = s.steps.find(x => x.state === "fail");
   const done = s.steps.filter(x => x.state !== "pending" && x.state !== "skip");
-  $("checksSum").textContent = failed ? "falla: " + failed.label.toLowerCase() : done.length ? `pasó ${done.length} de ${s.steps.length}` : "pendiente";
+  $("checksSum").textContent = failed ? `falló en «${failed.label}»` : done.length ? `pasó ${done.length} de ${s.steps.length} pruebas` : "pendiente";
   $("checks").innerHTML = s.steps.map(x =>
     `<li class="${x.state}"><span class="ic ${x.state}">${ICON[x.state] || "·"}</span><div><div class="ck-l">${esc(x.label)}</div><div class="ck-d">${esc(x.detail)}</div></div></li>`).join("");
 
@@ -454,7 +456,7 @@ function render(){
   $("topic").textContent = s.topic;
   $("ntfyWeb").href = s.ntfy_url;
   $("shareUrl").textContent = location.origin + "/v/" + WID;
-  $("waLink").href = "https://wa.me/?text=" + encodeURIComponent(`¿Ya cargó ${s.host}? Míralo en vivo y activa el aviso: ${location.origin}/v/${WID}`);
+  $("waLink").href = "https://wa.me/?text=" + encodeURIComponent(`¿Ya cargó ${s.host}? Mira el estado en vivo y activa el aviso: ${location.origin}/v/${WID}`);
   renderDiag();
   tick();
 }
@@ -463,7 +465,7 @@ function tick(){
   if (!snap) return;
   const now = snap.now + (Date.now()/1000 - fetchedAt), left = snap.next_check_at - now;
   $("frame").classList.toggle("checking", snap.active && left <= 1);
-  if (!snap.active){ $("nextText").textContent = "vigilancia en pausa"; $("bar").style.width = "0"; return; }
+  if (!snap.active){ $("nextText").textContent = "en pausa"; $("bar").style.width = "0"; return; }
   $("nextText").textContent = left > 1 ? `próxima revisión en ${Math.ceil(left)} s` : "revisando ahora…";
   $("bar").style.width = (left > 0 ? Math.max(0, Math.min(100, 100 - left / snap.check_every * 100)) : 100).toFixed(1) + "%";
 }
