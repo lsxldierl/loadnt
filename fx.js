@@ -105,3 +105,114 @@
   window.FX = { reveal, decode, ticker, terminal, typePlaceholder };
   addEventListener("DOMContentLoaded", () => reveal());
 })();
+
+// --- "ping" scene: a signal in monospace glyphs travels from our server to the site.
+// up: arrives and returns, the site lights green · partial: arrives weak (orange) · down: fades out, red ✕
+(function () {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const RAMP = " ·:-=+*#%@";
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function ping(canvas) {
+    const ctx = canvas.getContext("2d");
+    let state = "comprobando", host = "", W = 0, H = 0, cw = 9, ch = 16, cols = 0, rows = 0, t0 = performance.now();
+    const seed = [];
+    function size() {
+      const r = canvas.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1);
+      W = r.width; H = r.height; canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+      cols = Math.max(10, Math.floor(W / cw)); rows = Math.max(5, Math.floor(H / ch));
+      seed.length = 0; for (let i = 0; i < cols * rows; i++) seed.push(Math.random());
+    }
+    function color(st) { return st === "funcionando" ? css("--ok") : st === "parcial" ? css("--warn") : st === "caida" ? css("--bad") : css("--muted"); }
+    function frame(now) {
+      if (!W) size();
+      ctx.clearRect(0, 0, W, H);
+      ctx.font = `13px ${css("--mono") || "monospace"}`; ctx.textBaseline = "middle";
+      const mid = Math.floor(rows / 2), x0 = 3, x1 = cols - 9, span = x1 - x0;
+      const T = 3400, p = ((now - t0) % T) / T;                     // one round trip
+      const reach = state === "caida" ? 0.62 : 1;                    // down: dies before the site
+      const out = Math.min(1, p * 2), back = p > 0.5 ? (p - 0.5) * 2 : -1;
+      const head = x0 + span * Math.min(out, reach);
+      const fade = state === "caida" ? Math.max(0, 1 - Math.max(0, out - reach * 0.7) / 0.35) : 1;
+      const accent = color(state), dim = css("--line-2"), faint = css("--line");
+      const spread = Math.max(1.6, rows * 0.22);                      // how thick the signal is
+      const arrived = state !== "caida" && out >= 1 ? (p - 0.5) / 0.5 : -1;   // 0..1 after reaching the site
+      const burst = state === "caida" && out >= reach ? Math.min(1, (out - reach) / 0.35 + 0.0001) : -1;
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const dy = Math.abs(r - mid);
+        const n = seed[r * cols + c];
+        let v = 0;
+        if (c > x0 && c < x1) {
+          const d = head - c;                                         // outgoing pulse with a tapered trail
+          if (d >= 0 && d < 12 && p <= 0.5 && burst < 0) v = Math.max(v, (1 - d / 12) * Math.max(0, 1 - dy / (spread * (1 - d / 16)))) ;
+          if (back >= 0 && state !== "caida") {                       // reply coming back
+            const bh = x1 - span * back, db = c - bh;
+            if (db >= 0 && db < 9) v = Math.max(v, (1 - db / 9) * Math.max(0, 1 - dy / (spread * .7)) * (state === "parcial" ? 0.5 : 0.95));
+          }
+          if (dy === 0) v = Math.max(v, 0.13);                        // the wire
+        }
+        if (arrived >= 0) {                                           // rings rippling out of the site
+          const dx = (c - x1) * cw / ch, dist = Math.sqrt(dx * dx + dy * dy);
+          for (let k = 0; k < 3; k++) {
+            const rad = (arrived * 1.2 - k * 0.22) * rows * 0.9;
+            if (rad > 0) { const w = Math.abs(dist - rad); if (w < 0.7) v = Math.max(v, (1 - w / 0.7) * (1 - arrived) * (state === "parcial" ? 0.55 : 0.9)); }
+          }
+        }
+        if (burst >= 0) {                                             // down: the signal breaks apart
+          const bx = x0 + span * reach, dx = (c - bx) * cw / ch, dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 1 + burst * rows * 0.6 && n > 0.55 + burst * 0.4) v = Math.max(v, (1 - burst) * 0.8 * n);
+        }
+        if (v < 0.05) { if (n > 0.94) { ctx.fillStyle = faint; ctx.fillText("·", c * cw, r * ch + ch / 2); } continue; }
+        ctx.fillStyle = v > 0.32 ? accent : dim;
+        ctx.globalAlpha = Math.min(1, 0.3 + v);
+        ctx.fillText(RAMP[Math.min(RAMP.length - 1, Math.round(v * (RAMP.length - 1)))], c * cw, r * ch + ch / 2);
+        ctx.globalAlpha = 1;
+      }
+      // end nodes: our server on the left, the site on the right
+      const nodeY = mid * ch + ch / 2;
+      ctx.fillStyle = css("--fg"); ctx.fillText("▮", x0 * cw - cw, nodeY);
+      const lit = state === "funcionando" || state === "parcial" ? (p > 0.45 ? 1 : 0.5) : 1;
+      ctx.globalAlpha = lit; ctx.fillStyle = state === "comprobando" ? dim : accent;
+      ctx.fillText(state === "caida" ? "✕" : "▮", x1 * cw + cw, nodeY); ctx.globalAlpha = 1;
+      ctx.fillStyle = css("--dim"); ctx.font = `11px ${css("--mono") || "monospace"}`;
+      ctx.fillText("nosotros", (x0 - 1) * cw, nodeY + ch * 1.4);
+      const label = host.length > 22 ? host.slice(0, 21) + "…" : host;
+      ctx.textAlign = "center"; ctx.fillText(label, (x1 + 1.5) * cw, nodeY + ch * 1.4); ctx.textAlign = "left";
+      if (!reduce) requestAnimationFrame(frame);
+    }
+    new ResizeObserver(() => { size(); if (reduce) frame(performance.now()); }).observe(canvas);
+    requestAnimationFrame(frame);
+    return { set(st, h) { state = st; host = h || host; if (reduce) frame(performance.now()); } };
+  }
+
+  // --- response-time chart (one dot per check, last hour), drawn in the page's own palette
+  function rtChart(canvas, data, now) {
+    const r = canvas.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1), W = r.width, H = r.height;
+    if (!W || !H) return;
+    canvas.width = W * d; canvas.height = H * d;
+    const ctx = canvas.getContext("2d"); ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, W, H);
+    const pad = { l: 34, r: 6, t: 8, b: 18 }, iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+    const ok = data.filter(x => x[2] != null && x[1] !== "caida");
+    const max = Math.max(5, ...ok.map(x => x[2] / 1000));
+    const top = max <= 5 ? 5 : max <= 15 ? 15 : max <= 30 ? 30 : 60;
+    ctx.font = `10px ${css("--mono") || "monospace"}`; ctx.textBaseline = "middle";
+    [0, top / 2, top].forEach(v => {
+      const y = pad.t + ih - (v / top) * ih;
+      ctx.strokeStyle = css("--line"); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad.l, y + .5); ctx.lineTo(W - pad.r, y + .5); ctx.stroke();
+      ctx.fillStyle = css("--dim"); ctx.textAlign = "right"; ctx.fillText(v + " s", pad.l - 6, y);
+    });
+    ctx.textAlign = "left"; ctx.fillText("hace 60 min", pad.l, H - 6); ctx.textAlign = "right"; ctx.fillText("ahora", W - pad.r, H - 6);
+    const X = t => pad.l + iw * (1 - Math.min(3600, Math.max(0, now - t)) / 3600);
+    ctx.strokeStyle = css("--line-2"); ctx.lineWidth = 1.5; ctx.beginPath();
+    ok.forEach((x, i) => { const px = X(x[0]), py = pad.t + ih - Math.min(1, x[2] / 1000 / top) * ih; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    ctx.stroke();
+    data.forEach(x => {
+      const px = X(x[0]);
+      if (x[1] === "caida" || x[2] == null) { ctx.fillStyle = css("--bad"); ctx.fillRect(px - 1, pad.t + ih - 6, 2, 6); return; }
+      const py = pad.t + ih - Math.min(1, x[2] / 1000 / top) * ih;
+      ctx.fillStyle = x[1] === "funcionando" ? css("--ok") : css("--warn");
+      ctx.beginPath(); ctx.arc(px, py, 2.5, 0, 7); ctx.fill();
+    });
+  }
+
+  window.FX = Object.assign(window.FX || {}, { ping, rtChart });
+})();

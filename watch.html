@@ -18,21 +18,17 @@
   grid-template-areas:"status shot" "stats stats" "time checks";border-bottom:1px solid var(--line)}
 .c-status{display:flex;flex-direction:column}
 .c-status .bottom{margin-top:auto;padding-top:var(--g)}
-/* idle illustration: fills the status column when there's nothing to explain */
-.idle{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-top:var(--g);min-height:120px}
-.blocks{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;max-width:360px}
-.blocks i{aspect-ratio:1/1.6;border:1.5px solid var(--line-2);background:transparent;transition:background .4s,border-color .4s}
-.idle.caida .blocks i,.idle.comprobando .blocks i{animation:sweep 2.4s ease-in-out infinite;animation-delay:calc(var(--n) * 90ms)}
-.idle.caida .blocks i{--c:var(--bad)} .idle.comprobando .blocks i{--c:var(--muted)}
-.idle.caida .blocks i:last-child{border-style:dashed}
-@keyframes sweep{0%,60%,100%{background:transparent;border-color:var(--line-2)}20%{background:var(--c);border-color:var(--c)}}
-.idle.parcial .blocks i:nth-child(-n+7){background:var(--warn);border-color:var(--warn)}
-.idle.parcial .blocks i:nth-child(n+8){border-style:dashed}
-.idle.funcionando .blocks i{background:var(--ok);border-color:var(--ok)}
-.idle p{margin:0;font:13.5px/1.6 var(--mono);color:var(--muted);max-width:44ch}
+/* idle scene: fills the status column when there's nothing to explain */
+.idle{flex:1;display:flex;flex-direction:column;gap:14px;padding-top:var(--g);min-height:150px}
+.idle canvas{flex:1;width:100%;min-height:110px;display:block}
+.idle p{margin:0;font:13.5px/1.6 var(--mono);color:var(--muted);max-width:46ch}
 .idle p b{color:var(--fg);font-weight:500}
-@media (max-width:900px){.idle{min-height:0;padding-top:24px}}
-@media (prefers-reduced-motion:reduce){.idle .blocks i{animation:none!important}}
+/* history column: timeline + response time */
+.c-time{display:flex;flex-direction:column}
+.rt{flex:1;display:flex;flex-direction:column;gap:12px;margin-top:var(--g);padding-top:var(--g);border-top:1px solid var(--line);min-height:170px}
+.rt canvas{flex:1;width:100%;min-height:120px;display:block}
+.rt .rt-note{font:12px var(--mono);color:var(--dim)}
+@media (max-width:900px){.idle{min-height:0;padding-top:24px}.idle canvas{min-height:96px;flex:none;height:96px}.rt canvas{flex:none;height:140px}}
 .st-big.funcionando{color:var(--ok)} .st-big.parcial{color:var(--warn)} .st-big.caida{color:var(--bad)}
 .cell{padding:var(--g) var(--g) var(--g) 0;min-width:0}
 .c-shot,.c-checks{padding:var(--g) 0 var(--g) var(--g);border-left:1px solid var(--line)}
@@ -180,8 +176,8 @@ details[open] .chev{transform:rotate(180deg)}
         <p class="summary" id="summary">Haciendo la primera revisión…</p>
         <div class="probe"><span class="tag">desde tu conexión</span><span class="v dim" id="probeText">probando…</span></div>
         <div class="notes" id="notes"></div>
-        <div class="idle comprobando" id="idle" aria-hidden="true">
-          <div class="blocks"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i><i style="--n:10"></i><i style="--n:11"></i></div>
+        <div class="idle comprobando" id="idle">
+          <canvas id="pingCanvas" aria-hidden="true"></canvas>
           <p id="idleText"><b>Primera revisión en curso.</b> Puede tardar hasta un minuto.</p>
         </div>
         <div class="bottom">
@@ -217,6 +213,10 @@ details[open] .chev{transform:rotate(180deg)}
       <div class="cell c-time">
         <div class="head"><span class="tag">historial</span></div>
         <ul class="tl" id="timeline"><li><span class="dot"></span><div><div class="t1">Todavía no hay revisiones</div><div class="t2">la primera puede tardar un minuto</div></div></li></ul>
+        <div class="rt">
+          <div class="head"><span class="tag">tiempo de respuesta</span><span class="rt-note" id="rtNote"></span></div>
+          <canvas id="rtCanvas" aria-label="Tiempo de respuesta de cada revisión en la última hora"></canvas>
+        </div>
       </div>
 
       <details class="cell c-checks" id="checksBox">
@@ -414,6 +414,7 @@ function renderDiag(){
   const idle = $("idle"), stKey = !snap.active ? "comprobando" : (IDLE[st] ? st : "comprobando");
   idle.hidden = items.length > 0;
   idle.className = "idle " + stKey;
+  if (!idle.hidden){ window._ping = window._ping || FX.ping($("pingCanvas")); window._ping.set(stKey, snap.host); }
   $("idleText").innerHTML = !snap.active ? "<b>En pausa.</b> Nadie la ha visto en un rato; se reanuda sola al abrir esta página." : IDLE[stKey];
 }
 
@@ -499,6 +500,15 @@ function render(){
     }).join("");
     lastTopSeg = top;
   }
+
+  // response time (last hour)
+  const rt = s.rt || [];
+  FX.rtChart($("rtCanvas"), rt, now);
+  const answered = rt.filter(x => x[2] != null && x[1] !== "caida").map(x => x[2] / 1000).sort((a, b) => a - b);
+  const downs = rt.length - answered.length;
+  $("rtNote").textContent = answered.length
+    ? `mediana ${answered[Math.floor(answered.length / 2)].toFixed(1).replace(".", ",")} s · máx ${answered[answered.length - 1].toFixed(1).replace(".", ",")} s` + (downs ? ` · ${downs} sin respuesta` : "")
+    : (rt.length ? `${rt.length} sin respuesta` : "");
 
   // tests
   const failed = s.steps.find(x => x.state === "fail");

@@ -57,7 +57,8 @@ ERROR_PHRASES = ["service unavailable", "bad gateway", "gateway timeout", "inter
                  "too many connections", "database error", "error establishing", "fatal error",
                  "servicio no disponible", "error interno", "error de base de datos"]
 
-CAPTCHA_PHRASES = ["captcha", "verify you are human", "verifica que eres humano", "no soy un robot", "not a robot",
+CAPTCHA_PHRASES = ["captcha", "verify you are human", "prove your humanity", "demuestra que eres humano",
+                   "are you a robot", "eres un robot", "security check", "verificación de seguridad", "verifica que eres humano", "no soy un robot", "not a robot",
                    "attention required", "just a moment", "checking your browser", "comprobando tu navegador", "cf-chl"]
 DENIED_PHRASES = ["access denied", "acceso denegado", "forbidden", "prohibido", "you don't have permission",
                   "no tiene permiso", "no tienes permiso", "request blocked", "solicitud bloqueada"]
@@ -349,7 +350,8 @@ INSPECT_JS = r"""() => {
   }));
   return { textLen: text.length, text: text.slice(0, 500), hasForm: !!document.querySelector("form"),
            visible, chars, imgs, buttons, sheets: document.styleSheets.length, title: document.title.slice(0, 120),
-           href: location.href, low: (document.title + " " + text).slice(0, 4000).toLowerCase() };
+           href: location.href, low: (document.title + " " + text).slice(0, 4000).toLowerCase(),
+           captchaFrame: !!document.querySelector('iframe[src*="recaptcha"],iframe[src*="hcaptcha"],iframe[src*="challenges.cloudflare"],iframe[title*="captcha" i],.g-recaptcha,.h-captcha,.cf-turnstile,#challenge-form') };
 }"""
 
 # Only "move forward" buttons are ever clicked, never anything that could send, buy or delete.
@@ -493,7 +495,7 @@ class BrowserChecker:
             if any(p in low for p in SESSION_PHRASES):
                 out["notes"].append("session")
             short = info["textLen"] < 1500
-            if short and any(p in low for p in CAPTCHA_PHRASES):
+            if (short and any(p in low for p in CAPTCHA_PHRASES)) or (info["captchaFrame"] and info["textLen"] < 3000):
                 out["notes"].append("captcha")
                 steps["content"] = step("content", "fail", "Muestra una verificación «no soy un robot»")
             elif short and any(p in low for p in GEO_PHRASES):
@@ -957,6 +959,7 @@ def public_view(w, now):
     v["notes"] = w["notes"]
     v["minutes"] = minutes_for(w, now)
     v["recent"] = [[h[0], h[1], h[3]] for h in w["history"][-24:]]
+    v["rt"] = [[h[0], h[1], h[2]] for h in w["history"] if now - h[0] <= 3600]
     v["region"] = CHECKER_REGION
     v["site_country"] = site_country(w["host"])
     v["has_capture"] = w["capture"] is not None
