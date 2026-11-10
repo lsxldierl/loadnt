@@ -1,30 +1,7 @@
 #!/usr/bin/env python3
-"""
-Load'nt? — vigila cualquier página que casi nunca carga y avisa cuando funciona de verdad.
+"""loadnt: watches a URL with headless Chromium and reports when it actually works.
 
-Cualquiera pega un enlace en la página de inicio y recibe su propia página de vigilancia
-(/v/<id>) con captura en vivo, lista de pruebas, historial en lenguaje simple y avisos al celular.
-
-Cada revisión abre el enlace en Chromium (Playwright) y prueba:
-  1. El sitio contesta
-  2. Hay contenido (no está en blanco ni muestra un error)
-  3. Carga completa (diseño y scripts)
-  4. Se ve en pantalla
-  5. Hay botones que se pueden presionar
-  6. Los botones responden: solo hace clic en botones seguros como «Siguiente», «Comenzar» o «Next»
-     (nunca enviar, pagar, comprar, borrar...), y como máximo cada CLICK_EVERY segundos.
-
-Sin Playwright funciona en "modo básico" (solo pasos 1 y 2).
-
-Variables de entorno (opcionales):
-  SITE_NAME ("Load'nt?"), PORT (8000), CHECK_EVERY (30), TIMEOUT (45), CLICK_EVERY (600)
-  MAX_WATCHES (12)      cuántos enlaces se vigilan a la vez
-  WATCH_HOURS (24)      se deja de vigilar un enlace si nadie abre su página en este tiempo
-  WORKERS (1)           navegadores trabajando en paralelo (cada uno usa ~200 MB)
-  PRESET_URLS           enlaces destacados en el inicio, separados por espacios
-  NTFY_SERVER (https://ntfy.sh), NTFY_PREFIX (loadnt)
-  DATA_DIR (./data)     donde se guarda la lista de enlaces
-  ALLOW_PRIVATE (0)     1 = permite vigilar direcciones locales (solo para pruebas)
+See README.md for configuration.
 """
 
 import hashlib
