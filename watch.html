@@ -18,6 +18,21 @@
   grid-template-areas:"status shot" "stats stats" "time checks";border-bottom:1px solid var(--line)}
 .c-status{display:flex;flex-direction:column}
 .c-status .bottom{margin-top:auto;padding-top:var(--g)}
+/* idle illustration: fills the status column when there's nothing to explain */
+.idle{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-top:var(--g);min-height:120px}
+.blocks{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;max-width:360px}
+.blocks i{aspect-ratio:1/1.6;border:1.5px solid var(--line-2);background:transparent;transition:background .4s,border-color .4s}
+.idle.caida .blocks i,.idle.comprobando .blocks i{animation:sweep 2.4s ease-in-out infinite;animation-delay:calc(var(--n) * 90ms)}
+.idle.caida .blocks i{--c:var(--bad)} .idle.comprobando .blocks i{--c:var(--muted)}
+.idle.caida .blocks i:last-child{border-style:dashed}
+@keyframes sweep{0%,60%,100%{background:transparent;border-color:var(--line-2)}20%{background:var(--c);border-color:var(--c)}}
+.idle.parcial .blocks i:nth-child(-n+7){background:var(--warn);border-color:var(--warn)}
+.idle.parcial .blocks i:nth-child(n+8){border-style:dashed}
+.idle.funcionando .blocks i{background:var(--ok);border-color:var(--ok)}
+.idle p{margin:0;font:13.5px/1.6 var(--mono);color:var(--muted);max-width:44ch}
+.idle p b{color:var(--fg);font-weight:500}
+@media (max-width:900px){.idle{min-height:0;padding-top:24px}}
+@media (prefers-reduced-motion:reduce){.idle .blocks i{animation:none!important}}
 .st-big.funcionando{color:var(--ok)} .st-big.parcial{color:var(--warn)} .st-big.caida{color:var(--bad)}
 .cell{padding:var(--g) var(--g) var(--g) 0;min-width:0}
 .c-shot,.c-checks{padding:var(--g) 0 var(--g) var(--g);border-left:1px solid var(--line)}
@@ -165,6 +180,10 @@ details[open] .chev{transform:rotate(180deg)}
         <p class="summary" id="summary">Haciendo la primera revisión…</p>
         <div class="probe"><span class="tag">desde tu conexión</span><span class="v dim" id="probeText">probando…</span></div>
         <div class="notes" id="notes"></div>
+        <div class="idle comprobando" id="idle" aria-hidden="true">
+          <div class="blocks"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i><i style="--n:10"></i><i style="--n:11"></i></div>
+          <p id="idleText"><b>Primera revisión en curso.</b> Puede tardar hasta un minuto.</p>
+        </div>
         <div class="bottom">
           <div class="minutes" aria-label="Resultado de cada minuto, la última hora">
             <div class="ticks" id="ticks"></div>
@@ -386,6 +405,16 @@ function renderDiag(){
     items.push({cls: n.kind === "maintenance" || n.kind === "slow" ? "info" : "", title:n.title, text:n.text});
   });
   $("notes").innerHTML = items.slice(0, 3).map(n => `<div class="note ${n.cls}"><b>${esc(n.title)}</b><p>${esc(n.text)}</p></div>`).join("");
+  const IDLE = {
+    caida: "<b>No hay nada que puedas hacer por ahora.</b> El sitio no responde; seguimos intentando y te avisamos apenas cargue.",
+    parcial: "<b>Carga, pero incompleta.</b> Si entras, recarga varias veces hasta que se vea bien.",
+    funcionando: "<b>Todo en orden.</b> Entra ahora y termina lo que necesites mientras dure.",
+    comprobando: "<b>Primera revisión en curso.</b> Puede tardar hasta un minuto."
+  };
+  const idle = $("idle"), stKey = !snap.active ? "comprobando" : (IDLE[st] ? st : "comprobando");
+  idle.hidden = items.length > 0;
+  idle.className = "idle " + stKey;
+  $("idleText").innerHTML = !snap.active ? "<b>En pausa.</b> Nadie la ha visto en un rato; se reanuda sola al abrir esta página." : IDLE[stKey];
 }
 
 function render(){
