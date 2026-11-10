@@ -118,7 +118,7 @@ h1 .answer.funcionando{color:var(--ok)} h1 .answer.parcial{color:var(--warn)} h1
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .chip{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.chip code{font:500 13px var(--mono);background:var(--raise);border:1px solid var(--line-2);border-radius:2px;padding:7px 10px;color:var(--fg);overflow-wrap:anywhere;min-width:0}
+.chip code{font:500 13px var(--mono);background:var(--raise);border:1px solid var(--line-2);border-radius:2px;padding:7px 10px;color:var(--fg);min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .links{display:flex;gap:18px;flex-wrap:wrap}
 
 footer{border-top:1px solid var(--line);padding-block:28px 44px;color:var(--dim);font:12.5px/1.6 var(--mono)}

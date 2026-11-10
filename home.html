@@ -129,7 +129,7 @@ const PILL = {funcionando:"✓ funciona", parcial:"! a medias", caida:"✕ no ca
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const mine = () => { try { return JSON.parse(localStorage.getItem("loadnt.mine") || "[]"); } catch(e){ return []; } };
 const shortPath = url => { try { const u = new URL(url), p = u.pathname + u.search; return p === "/" ? "" : p; } catch(e){ return ""; } };
-const row = (it, st) => `<li><a href="/v/${encodeURIComponent(it.id)}"><span style="min-width:0"><span class="host">${esc(it.host)}</span><span class="path">${esc(shortPath(it.url))}</span></span><span class="right">${st ? `<span class="pill ${st}">${PILL[st] || ""}</span>` : ""}<span class="go">→</span></span></a></li>`;
+const row = (it, st) => `<li><a href="/v/${encodeURIComponent(it.id)}?u=${encodeURIComponent(it.url)}"><span style="min-width:0"><span class="host">${esc(it.host)}</span><span class="path">${esc(shortPath(it.url))}</span></span><span class="right">${st ? `<span class="pill ${st}">${PILL[st] || ""}</span>` : ""}<span class="go">→</span></span></a></li>`;
 
 async function showLists(){
   let presets = [];

@@ -206,8 +206,21 @@ watches = {}      # id -> watch dict
 by_url = {}       # url -> id
 
 
+B62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def url_id(url):
+    """Stable id for a URL, so the same link keeps the same page and ntfy topic across restarts."""
+    n = int.from_bytes(hashlib.sha256(url.encode("utf-8")).digest()[:8], "big")
+    out = ""
+    while len(out) < 10:
+        n, r = divmod(n, 62)
+        out += B62[r]
+    return out
+
+
 def new_watch(url, wid=None, created=None, last_view=None, preset=False):
-    wid = wid or secrets.token_urlsafe(6).replace("-", "a").replace("_", "b")
+    wid = wid or url_id(url)
     now = time.time()
     w = {
         "id": wid, "url": url, "host": urllib.parse.urlsplit(url).hostname, "preset": preset,
@@ -958,15 +971,14 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, page("home.html"), "text/html; charset=utf-8")
         m = re.fullmatch(r"/v/([A-Za-z0-9]{4,16})/?", path)
         if m:
-            if m.group(1) not in watches:
-                return self._send(404, page("home.html"), "text/html; charset=utf-8")
+            # Served even if the id is unknown (e.g. after a restart): the page re-adds the link itself.
             return self._send(200, page("watch.html"), "text/html; charset=utf-8")
         m = re.fullmatch(r"/api/estado/([A-Za-z0-9]{4,16})", path)
         if m:
             with lock:
                 w = watches.get(m.group(1))
                 if not w:
-                    return self._json(404, {"error": "No encontramos esa página."})
+                    return self._json(404, {"error": "No encontramos esa página.", "missing": True})
                 touch(w)
                 now = time.time()
                 v = public_view(w, now)

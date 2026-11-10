@@ -369,6 +369,9 @@ function render(){
   const s = snap, now = s.now + (Date.now()/1000 - fetchedAt);
   const paused = !s.active, st = s.status, T = L[st] || L.comprobando;
   remember(s);
+  if (!new URLSearchParams(location.search).get("u")) {
+    try { history.replaceState(null, "", `/v/${WID}?u=${encodeURIComponent(s.url)}`); } catch(e){}
+  }
 
   let path = "";
   try { const u = new URL(s.url); path = u.pathname + u.search; $("bUrl").textContent = u.host + (path === "/" ? "" : path); } catch(e){}
@@ -455,8 +458,9 @@ function render(){
   $("ntfyCol").hidden = !s.ntfy_url;
   $("topic").textContent = s.topic;
   $("ntfyWeb").href = s.ntfy_url;
-  $("shareUrl").textContent = location.origin + "/v/" + WID;
-  $("waLink").href = "https://wa.me/?text=" + encodeURIComponent(`¿Ya cargó ${s.host}? Mira el estado en vivo y activa el aviso: ${location.origin}/v/${WID}`);
+  const shareLink = `${location.origin}/v/${WID}?u=${encodeURIComponent(s.url)}`;
+  $("shareUrl").textContent = shareLink;
+  $("waLink").href = "https://wa.me/?text=" + encodeURIComponent(`¿Ya cargó ${s.host}? Mira el estado en vivo y activa el aviso: ${shareLink}`);
   renderDiag();
   tick();
 }
@@ -470,11 +474,46 @@ function tick(){
   $("bar").style.width = (left > 0 ? Math.max(0, Math.min(100, 100 - left / snap.check_every * 100)) : 100).toFixed(1) + "%";
 }
 
+/* If the server restarted and forgot this link, add it back using the address we know
+   (from the shared link's ?u= or from this browser's saved pages). Same URL -> same id. */
+let recovering = false;
+function knownUrl(){
+  const q = new URLSearchParams(location.search).get("u");
+  if (q) return q;
+  try { const e = JSON.parse(localStorage.getItem("loadnt.mine") || "[]").find(x => x.id === WID); if (e) return e.url; } catch(e){}
+  return null;
+}
+function showMissing(msg){
+  FX.decode($("answer"), "No la encontramos.");
+  $("statusText").textContent = "Sin datos";
+  $("summary").textContent = msg || "El servidor se reinició y no tenemos el enlace de esta página.";
+  $("sub").innerHTML = 'Pega el enlace otra vez en el inicio y sigue igual que antes. <a class="tlink" href="/">ir al inicio →</a>';
+  $("nextText").textContent = "detenida";
+}
+async function recover(){
+  if (recovering) return;
+  recovering = true;
+  const url = knownUrl();
+  if (!url) return showMissing();
+  $("summary").textContent = "Reanudando la revisión…";
+  try {
+    const r = await fetch("/api/vigilar", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({url})});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "");
+    if (d.id !== WID){
+      try { localStorage.setItem("loadnt.mine", JSON.stringify(JSON.parse(localStorage.getItem("loadnt.mine") || "[]").filter(x => x.id !== WID))); } catch(e){}
+      location.replace("/v/" + d.id + "?u=" + encodeURIComponent(url));
+      return;
+    }
+    recovering = false;
+  } catch(e){ showMissing(e.message || undefined); }
+}
+
 let probeStarted = false;
 async function poll(){
   try{
     const r = await fetch("/api/estado/" + WID, {cache:"no-store"});
-    if (r.status === 404){ location.href = "/"; return; }
+    if (r.status === 404){ recover(); return; }
     snap = await r.json(); fetchedAt = Date.now()/1000;
     $("offline").hidden = true;
     if (snap.status === "funcionando" && lastStatus !== null && lastStatus !== "funcionando") { notifyUp(); runProbe(); }
